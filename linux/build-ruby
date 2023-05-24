@@ -5,7 +5,8 @@ SELFDIR=`dirname "$0"`
 SELFDIR=`cd "$SELFDIR" && pwd`
 source "$SELFDIR/../shared/library.sh"
 
-CPUCOUNT=`"$SELFDIR/internal/cpucount"`
+# no /proc/cpuinfo on darwin
+CPUCOUNT=`"$SELFDIR/internal/cpucount"` || CPUCOUNT=$(sysctl -n hw.ncpu)
 RUBY_VERSIONS=(`cat "$SELFDIR/../RUBY_VERSIONS.txt"`)
 
 OUTPUT_DIR=
