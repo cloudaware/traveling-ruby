@@ -62,3 +62,4 @@ jobs:
           artifacts: linux/traveling-ruby-${{ env.PKG_DATE }}-${{ env.RB_VERSION }}-${{ matrix.arch }}-linux.tar.gz
           tag: "v${{ env.PKG_DATE }}-${{ env.RB_VERSION }}"
           token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true

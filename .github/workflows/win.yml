@@ -45,3 +45,4 @@ jobs:
           artifacts: windows/traveling-ruby-${{ env.PKG_DATE }}-${{ env.RB_VERSION }}-${{ matrix.arch }}-windows.tar.gz
           tag: "v${{ env.PKG_DATE }}-${{ env.RB_VERSION }}"
           token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
