@@ -1,7 +1,7 @@
 name: Windows
 on:
   push:
-    branches: [ main, ci, 3.2.2 ]
+    branches: [ main, ci ]
   pull_request:
     branches: [ main, ci ]
 

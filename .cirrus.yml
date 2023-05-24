@@ -1,100 +1,59 @@
 env:
-  RB_VERSION: 3.2.2
-  PKG_DATE: 20230523
+  TRAVELING_RUBY_RB_VERSION: 3.2.2
+  TRAVELING_RUBY_PKG_DATE: 20230523
 
-linux_docker_builder:
+linux_arm_docker_builder:
   env:
     CIRRUS_ARCH: arm64
-    # image: family/docker-builder-arm64
-  # timeout_in: 90m
-  # compute_engine_instance:
-  #   image_project: cirrus-images
-  #   image: family/docker-builder-arm64
-  #   architecture: arm64
-  #   platform: linux
-  #   cpu: 4
-  #   memory: 16G
-  script:
-    - cd linux
-    - ARCHITECTURES="arm64" rake image
-    - ARCHITECTURES="arm64" rake
-    - ls
-    - cp -R traveling-ruby*.gz ../build
+    TRAVELING_RUBY_ARCHITECTURE: arm64
+    TRAVELING_RUBY_PLATFORM: linux
+  script: ./scripts/build.sh
   binary_artifacts:
     path: "build/traveling-ruby*.gz"
 
 macosx-arm64_task: 
-  timeout_in: 90m
   macos_instance:
     image: ghcr.io/cirruslabs/macos-ventura-base:latest
-  script:
-    - rbenv local system
-    - sudo gem install bundler:2.3.17
-    - rbenv global 3.2.2
-    - cd osx
-    - rake stash_conflicting_paths
-    - rake --trace
-    - ls
-    - cp -R traveling-ruby*.gz ../build
+  env:
+    CIRRUS_ARCH: arm64
+    TRAVELING_RUBY_ARCHITECTURE: arm64
+    TRAVELING_RUBY_PLATFORM: osx
+  script: ./scripts/build.sh
   binary_artifacts:
     path: "build/traveling-ruby*.gz"
 
-linux-x86_64_task: 
+linux_amd_docker_builder: 
   only_if: $CIRRUS_CHANGE_TITLE =~ 'ci:.*\[x86_64\].*'
-  timeout_in: 90m
-  compute_engine_instance:
-    image_project: cirrus-images
-    image: family/docker-builder
-    platform: linux
-    cpu: 4
-    memory: 16G
-  script:
-    - cd linux
-    - ARCHITECTURES="x86_64" rake image
-    - ARCHITECTURES="x86_64" rake
-    - ls
-    - cp -R traveling-ruby*.gz ../build
+  env:
+    CIRRUS_ARCH: amd64
+    TRAVELING_RUBY_ARCHITECTURE: x86_64
+    TRAVELING_RUBY_PLATFORM: linux
+  script: ./scripts/build.sh
   binary_artifacts:
     path: "build/traveling-ruby*.gz"
+    
 macosx-x86_64_task: 
   only_if: $CIRRUS_CHANGE_TITLE =~ 'ci:.*\[x86_64\].*'
-  timeout_in: 90m
   macos_instance:
     image: ghcr.io/cirruslabs/macos-ventura-base:latest
-  script:
-    - rbenv local system
-    - sudo gem install bundler:2.3.17
-    - rbenv global 3.2.2
-    - softwareupdate --install-rosetta --agree-to-license
-    - cd osx
-    - rake stash_conflicting_paths
-    - arch -x86_64 rake --trace
-    - rake unstash_conflicting_paths
-    - ls
-    - cp -R traveling-ruby*.gz ../build
+  env:
+    CIRRUS_ARCH: arm64
+    TRAVELING_RUBY_ARCHITECTURE: x86_64
+    TRAVELING_RUBY_PLATFORM: osx
+    USE_ROSETTA: "true"
+  script: ./scripts/build.sh
   binary_artifacts:
     path: "build/traveling-ruby*.gz"
+
 windows_task:
   only_if: $CIRRUS_CHANGE_TITLE =~ 'ci:.*\[x86_64\].*'
-  timeout_in: 90m
   windows_container:
     image: cirrusci/windowsservercore:2019
-  script: |
-      uname -m
-      cd windows
-      sh -c 'mkdir -p cache output/3.2.2'
-      sh -c './build-ruby -a x86 -r 3.2.2 cache output/3.2.2'
-      sh -c './package -r traveling-ruby-20230428-3.2.2-x86-windows.tar.gz output/3.2.2'
-      sh -c 'ls'
-      sh -c 'rm -rf cache output/3.2.2'
-      sh -c 'mkdir -p cache output/3.2.2'
-      sh -c './build-ruby -a x86_64 -r 3.2.2 cache output/3.2.2'
-      sh -c './package -r traveling-ruby-20230428-3.2.2-x86_64-windows.tar.gz output/3.2.2'
-      sh -c 'ls'
-      cp -R traveling-ruby*.gz ../build
+  env:
+    CIRRUS_ARCH: arm64
+    TRAVELING_RUBY_ARCHITECTURE: x86_64
+    TRAVELING_RUBY_PLATFORM: windows
+    USE_ROSETTA: "true"
+  script: ./scripts/build.sh
   binary_artifacts:
     path: "build/traveling-ruby*.gz"
-
-
-# skip: "changesInclude('.github/**','.circleci/**')"
-

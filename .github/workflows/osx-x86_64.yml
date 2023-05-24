@@ -1,7 +1,7 @@
 name: MacOS x86_64
 on:
   push:
-    branches: [ main, ci ]
+    branches: [ main, ci, 3.2.2 ]
     paths-ignore:
       - '.circleci/**'
       - '.cirrus.yml'
@@ -45,7 +45,10 @@ jobs:
       #       sudo tar -xf MacOSX10.14.sdk.tar.xz -C "$(xcode-select -p)/Platforms/MacOSX.platform/Developer/SDKs"
       - name: build x86
         run: |
-            # gem install bundler:2.3.17
+            rbenv versions
+            rbenv global system
+            gem install bundler:2.4.10
+            rbenv global 3.2.2
             cd osx
             rake stash_conflicting_paths
             rake --trace

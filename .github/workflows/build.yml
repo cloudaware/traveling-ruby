@@ -1,25 +1,17 @@
-name: Linux - x86_64 - build image, package, publish
+name: build - x86_64
 on:
   push:
-    branches: [ main, ci ]
-    paths-ignore:
-      - '.circleci/**'
-      - '.cirrus.yml'
-  pull_request:
-    branches: [ main ]
-    paths-ignore:
-      - '.circleci/**'
-      - '.cirrus.yml'
+    branches: [ main, ci, 3.2.2 ]
 
 env:
-  RB_VERSION: 3.2.2
-  PKG_DATE: 20230523
+  TRAVELING_RUBY_RB_VERSION: 3.2.2
+  TRAVELING_RUBY_PKG_DATE: 20230523
 
 jobs:
-  make-ubuntu-x86_64:
+  build:
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest,windows-latest]
         arch: [x86_64]
       fail-fast: false
     runs-on: ${{ matrix.os }}
@@ -31,18 +23,11 @@ jobs:
         with:
           ruby-version: ${{ env.RB_VERSION }}
       - name: build image
-        run: |
-          cd linux
-          rake image
-          docker images
+        run: ./scripts/build.sh
         env:
-          ARCHITECTURES: ${{ matrix.arch }}
-      - name: build from image
-        run: |
-          cd linux
-          rake
-        env:
-          ARCHITECTURES: ${{ matrix.arch }}
+          PKG_DATE: ${{ env.PKG_DATE }}
+          TRAVELING_RUBY_PLATFORM: ${{ runner.os }}
+          TRAVELING_RUBY_ARCHITECTURE: ${{ matrix.arch }}
       - name: push to dockerhub
         if: github.ref == 'refs/heads/dockerhub'
         run: |
@@ -53,11 +38,10 @@ jobs:
       - name: 'Upload Artifact - linux ${{ matrix.arch }}'
         uses: actions/upload-artifact@v3
         with:
-          name: traveling-ruby-${{ env.PKG_DATE }}-${{ env.RB_VERSION }}-${{ matrix.arch }}-linux.tar.gz
-          path: linux/traveling-ruby-${{ env.PKG_DATE }}-${{ env.RB_VERSION }}-${{ matrix.arch }}-linux.tar.gz
+          path: build/**
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: linux/traveling-ruby-${{ env.PKG_DATE }}-${{ env.RB_VERSION }}-${{ matrix.arch }}-linux.tar.gz
+          artifacts: build/**
           tag: "v${{ env.PKG_DATE }}-${{ env.RB_VERSION }}"
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
