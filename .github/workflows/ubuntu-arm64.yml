@@ -1,7 +1,7 @@
 name: Linux - arm64 - build from dockerhub builder
 on:
   push:
-    branches: [ main, ci, 3.2.2 ]
+    branches: [ main, ci ]
     paths-ignore:
       - '.circleci/**'
       - '.cirrus.yml'

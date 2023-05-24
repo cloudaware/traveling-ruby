@@ -44,6 +44,7 @@ jobs:
         env:
           ARCHITECTURES: ${{ matrix.arch }}
       - name: push to dockerhub
+        if: github.ref == 'refs/heads/dockerhub'
         run: |
           docker push you54f/traveling-ruby-builder-${{ matrix.arch }}:1.0
         env:
