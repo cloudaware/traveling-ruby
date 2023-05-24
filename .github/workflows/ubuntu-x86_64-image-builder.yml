@@ -1,21 +1,26 @@
-name: Linux - x86_64 - image builder
+name: Linux - x86_64 - build from dockerhub builder
 on:
   push:
-    branches: [ main, ci ]
+    branches: [ main, ci, 3.2.2 ]
     paths-ignore:
       - '.circleci/**'
       - '.cirrus.yml'
   pull_request:
-    branches: [ main, ci ]
+    branches: [ main ]
     paths-ignore:
       - '.circleci/**'
       - '.cirrus.yml'
 
+env:
+  RB_VERSION: 3.2.2
+  PKG_DATE: 20230523
+
 jobs:
-  make-ubuntu-x86_64-image:
+  make-ubuntu-x86_64:
     strategy:
       matrix:
         os: [ubuntu-latest]
+        arch: [x86_64]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
@@ -27,17 +32,33 @@ jobs:
       - name: "Set up Ruby"
         uses: ruby/setup-ruby@v1
         with:
-            ruby-version: 3.2.2
+          ruby-version: ${{ env.RB_VERSION }}
       - name: build image
         run: |
           cd linux
-          ARCHITECTURES="x86_64" rake image
+          rake image
           docker images
         env:
-          ARCHITECTURES: "x86_64"
+          ARCHITECTURES: ${{ matrix.arch }}
       - name: build from image
         run: |
           cd linux
-          ARCHITECTURES="x86_64" rake
+          rake
         env:
-          ARCHITECTURES: "x86_64"
+          ARCHITECTURES: ${{ matrix.arch }}
+      - name: push to dockerhub
+        run: |
+          docker push you54f/traveling-ruby-builder-${{ matrix.arch }}:1.0
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+      - name: 'Upload Artifact - linux ${{ matrix.arch }}'
+        uses: actions/upload-artifact@v3
+        with:
+          name: traveling-ruby-${{ env.PKG_DATE }}-${{ env.RB_VERSION }}-${{ matrix.arch }}-linux.tar.gz
+          path: linux/traveling-ruby-${{ env.PKG_DATE }}-${{ env.RB_VERSION }}-${{ matrix.arch }}-linux.tar.gz
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: linux/traveling-ruby-${{ env.PKG_DATE }}-${{ env.RB_VERSION }}-${{ matrix.arch }}-linux.tar.gz
+          tag: "v${{ env.PKG_DATE }}-${{ env.RB_VERSION }}"
+          token: ${{ secrets.GITHUB_TOKEN }}

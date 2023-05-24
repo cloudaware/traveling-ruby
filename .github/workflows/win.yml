@@ -1,13 +1,13 @@
 name: Windows
 on:
   push:
-    branches: [ main, ci ]
+    branches: [ main, ci, 3.2.2 ]
   pull_request:
     branches: [ main, ci ]
 
 env:
   RB_VERSION: 3.2.2
-  PKG_DATE: 20230428
+  PKG_DATE: 20230523
 
 jobs:
   make-windows:
@@ -40,3 +40,8 @@ jobs:
         with:
           name: traveling-ruby-${{ env.PKG_DATE }}-${{ env.RB_VERSION }}-${{ matrix.arch }}-windows.tar.gz
           path: windows/traveling-ruby-${{ env.PKG_DATE }}-${{ env.RB_VERSION }}-${{ matrix.arch }}-windows.tar.gz
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: windows/traveling-ruby-${{ env.PKG_DATE }}-${{ env.RB_VERSION }}-${{ matrix.arch }}-windows.tar.gz
+          tag: "v${{ env.PKG_DATE }}-${{ env.RB_VERSION }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
