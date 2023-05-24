@@ -11,23 +11,25 @@ on:
       - '.circleci/**'
       - '.cirrus.yml'
 
+env:
+  RB_VERSION: 3.2.2
+  PKG_DATE: 20230523
+  
 jobs:
   make-ubuntu-arm64:
     strategy:
       matrix:
         os: [ubuntu-latest]
+        arch: [arm64]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-        with:
-          all_but_latest: true
+
       - uses: actions/checkout@v3
       - name: "Set up Ruby"
         uses: ruby/setup-ruby@v1
         with:
-            ruby-version: 3.2.2
+          ruby-version: ${{ env.RB_VERSION }}
       - name: package
         run: |
             docker run --privileged --rm tonistiigi/binfmt --install all
@@ -35,9 +37,15 @@ jobs:
             rake
             ls
         env:
-          ARCHITECTURES: "arm64"
-      - name: 'Upload Artifact - linux arm64'
+          ARCHITECTURES: ${{ matrix.arch }}
+      - name: 'Upload Artifact - linux ${{ matrix.arch }}'
         uses: actions/upload-artifact@v3
         with:
-          name: traveling-ruby-20230428-3.2.2-linux-arm64.tar.gz
-          path: linux/traveling-ruby-20230428-3.2.2-linux-arm64.tar.gz
+          name: traveling-ruby-${{ env.PKG_DATE }}-${{ env.RB_VERSION }}-${{ matrix.arch }}-linux.tar.gz
+          path: linux/traveling-ruby-${{ env.PKG_DATE }}-${{ env.RB_VERSION }}-${{ matrix.arch }}-linux.tar.gz
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: linux/traveling-ruby-${{ env.PKG_DATE }}-${{ env.RB_VERSION }}-${{ matrix.arch }}-linux.tar.gz
+          tag: "v${{ env.PKG_DATE }}-${{ env.RB_VERSION }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true

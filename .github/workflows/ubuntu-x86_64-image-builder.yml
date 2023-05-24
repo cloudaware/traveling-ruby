@@ -1,4 +1,4 @@
-name: Linux - x86_64 - build from dockerhub builder
+name: Linux - x86_64 - build image, package, publish
 on:
   push:
     branches: [ main, ci, 3.2.2 ]
@@ -24,10 +24,7 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-        with:
-          all_but_latest: true
+
       - uses: actions/checkout@v3
       - name: "Set up Ruby"
         uses: ruby/setup-ruby@v1
