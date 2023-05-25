@@ -38,10 +38,10 @@ jobs:
       - name: 'Upload Artifact - linux ${{ matrix.arch }}'
         uses: actions/upload-artifact@v3
         with:
-          path: build/**
+          path: build
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: build/**
+          artifacts: build
           tag: "v${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}"
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true

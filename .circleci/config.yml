@@ -104,7 +104,7 @@ jobs:
     - run:
         name: "Publish Release on GitHub"
         command: |
-          go get github.com/tcnksm/ghr
+          go install github.com/tcnksm/ghr@latest
           ghr v<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-circle -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ./artifacts/
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows

@@ -62,3 +62,4 @@ else
     cp -R traveling-ruby-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-${ARCHITECTURES}.tar.gz ../build
 fi
 ls
+ls ../build

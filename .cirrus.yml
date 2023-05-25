@@ -9,7 +9,7 @@ linux_arm_docker_builder:
     TRAVELING_RUBY_PLATFORM: linux
   script: ./scripts/build.sh
   binary_artifacts:
-    path: "build/traveling-ruby*.gz"
+    path: "build"
 
 macosx-arm64_task: 
   macos_instance:
@@ -20,7 +20,7 @@ macosx-arm64_task:
     TRAVELING_RUBY_PLATFORM: osx
   script: ./scripts/build.sh
   binary_artifacts:
-    path: "build/traveling-ruby*.gz"
+    path: "build"
 
 linux_amd_docker_builder: 
   only_if: $CIRRUS_CHANGE_TITLE =~ 'ci:.*\[x86_64\].*'
@@ -30,7 +30,7 @@ linux_amd_docker_builder:
     TRAVELING_RUBY_PLATFORM: linux
   script: ./scripts/build.sh
   binary_artifacts:
-    path: "build/traveling-ruby*.gz"
+    path: "build"
     
 macosx-x86_64_task: 
   only_if: $CIRRUS_CHANGE_TITLE =~ 'ci:.*\[x86_64\].*'
@@ -43,7 +43,7 @@ macosx-x86_64_task:
     USE_ROSETTA: "true"
   script: ./scripts/build.sh
   binary_artifacts:
-    path: "build/traveling-ruby*.gz"
+    path: "build"
 
 windows_task:
   only_if: $CIRRUS_CHANGE_TITLE =~ 'ci:.*\[x86_64\].*'
@@ -56,4 +56,4 @@ windows_task:
     USE_ROSETTA: "true"
   script: ./scripts/build.sh
   binary_artifacts:
-    path: "build/traveling-ruby*.gz"
+    path: "build"
