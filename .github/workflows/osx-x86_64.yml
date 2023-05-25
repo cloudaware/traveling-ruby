@@ -21,15 +21,16 @@ jobs:
     steps:
 
       - uses: actions/checkout@v3
-      # - run: |
-      #     brew install ruby@2.6
-      #     brew install rbenv
-      #     rbenv versions
-      #     ruby --version
-      #     rbenv global 3.2.2
-      #     gem install bundler:2.3.17
-      #     rbenv install 3.2.2
-      #     ls /Library/Ruby/Gems/2.6.0/gems/
+      - run: |
+          ruby --version
+          brew install rbenv
+          rbenv versions
+          ruby --version
+          rbenv global system
+          gem install bundler:2.4.10
+          rbenv install 3.2.2
+          rbenv global 3.2.2
+          gem install bundler:2.4.10
       # - name: "Set up Ruby"
       #   uses: ruby/setup-ruby@v1
       #   with:
@@ -47,7 +48,7 @@ jobs:
         run: |
             # rbenv versions
             # rbenv global system
-            gem install bundler:2.4.10
+            # gem install bundler:2.4.10
             # rbenv global 3.2.2
             cd osx
             rake stash_conflicting_paths

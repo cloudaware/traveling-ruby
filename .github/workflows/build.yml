@@ -25,10 +25,13 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ env.TRAVELING_RUBY_RB_VERSION }}
+      - name: set TRAVELING_RUBY_PLATFORM - downcase RUNNER_OS
+        run: |
+          echo "TRAVELING_RUBY_PLATFORM=${RUNNER_OS,,}" >>${GITHUB_ENV}
       - name: build image
         run: ./scripts/build.sh
         env:
-          TRAVELING_RUBY_PLATFORM: ${{ runner.os }}
+          TRAVELING_RUBY_PLATFORM: ${{ env.TRAVELING_RUBY_PLATFORM }}
           TRAVELING_RUBY_ARCHITECTURE: ${{ matrix.arch }}
       - name: push to dockerhub
         if: github.ref == 'refs/heads/dockerhub' && runner.os == 'ubuntu-latest'
@@ -40,11 +43,11 @@ jobs:
       - name: 'Upload Artifact - linux ${{ matrix.arch }}'
         uses: actions/upload-artifact@v3
         with:
-          name: traveling-ruby-${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}-${{ matrix.arch }}-${{ runner.os }}.tar.gz
-          path: build/traveling-ruby-${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}-${{ matrix.arch }}-${{ runner.os }}.tar.gz
+          name: traveling-ruby-${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}-${{ matrix.arch }}-${{ env.TRAVELING_RUBY_PLATFORM }}.tar.gz
+          path: build/traveling-ruby-${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}-${{ matrix.arch }}-${{ env.TRAVELING_RUBY_PLATFORM }}.tar.gz
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: build/traveling-ruby-${{ env.PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}-${{ matrix.arch }}-${{ runner.os }}.tar.gz
+          artifacts: build/traveling-ruby-${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}-${{ matrix.arch }}-${{ env.TRAVELING_RUBY_PLATFORM }}.tar.gz
           tag: "v${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}"
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
