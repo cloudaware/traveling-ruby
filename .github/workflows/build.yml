@@ -21,11 +21,11 @@ jobs:
       - name: "Set up Ruby"
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ${{ env.RB_VERSION }}
+          ruby-version: ${{ env.TRAVELING_RUBY_RB_VERSION }}
       - name: build image
         run: ./scripts/build.sh
         env:
-          PKG_DATE: ${{ env.PKG_DATE }}
+          TRAVELING_RUBY_PKG_DATE: ${{ env.TRAVELING_RUBY_PKG_DATE }}
           TRAVELING_RUBY_PLATFORM: ${{ runner.os }}
           TRAVELING_RUBY_ARCHITECTURE: ${{ matrix.arch }}
       - name: push to dockerhub
@@ -42,6 +42,6 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
           artifacts: build/**
-          tag: "v${{ env.PKG_DATE }}-${{ env.RB_VERSION }}"
+          tag: "v${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}"
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true

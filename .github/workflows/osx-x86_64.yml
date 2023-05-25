@@ -45,10 +45,10 @@ jobs:
       #       sudo tar -xf MacOSX10.14.sdk.tar.xz -C "$(xcode-select -p)/Platforms/MacOSX.platform/Developer/SDKs"
       - name: build x86
         run: |
-            rbenv versions
-            rbenv global system
+            # rbenv versions
+            # rbenv global system
             gem install bundler:2.4.10
-            rbenv global 3.2.2
+            # rbenv global 3.2.2
             cd osx
             rake stash_conflicting_paths
             rake --trace
