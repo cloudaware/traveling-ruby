@@ -53,14 +53,14 @@ fi
 
 ls
 if [[ "$PLATFORM" == "windows" ]]; then
-    # tar cvzf traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-x86.tar.gz traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-x86/
-    # tar cvzf traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-x86_64.tar.gz traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-x86_64/
-    cp -R traveling-ruby-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-x86.tar.gz ../build
-    cp -R traveling-ruby-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-x86_64.tar.gz ../build
+    tar cvzf traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-x86-${PLATFORM}.tar.gz traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-x86-${PLATFORM}/
+    # tar cvzf traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-x86_64-${PLATFORM}.tar.gz traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-x86_64-${PLATFORM}/
+    cp -R traveling-ruby-${PKG_DATE}-${RB_VERSION}-x86-${PLATFORM}.tar.gz ../build
+    cp -R traveling-ruby-${PKG_DATE}-${RB_VERSION}-x86_64-${PLATFORM}.tar.gz ../build
 else
-    # tar cvzf traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-${ARCHITECTURES}.tar.gz traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-${ARCHITECTURES}/
-    cp -R traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-${ARCHITECTURES}.tar.gz ../build
-    cp -R traveling-ruby-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-${ARCHITECTURES}.tar.gz ../build
+    tar cvzf traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-${ARCHITECTURES}-${PLATFORM}.tar.gz traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-${ARCHITECTURES}-${PLATFORM}/
+    cp -R traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-${ARCHITECTURES}-${PLATFORM}.tar.gz ../build
+    cp -R traveling-ruby-${PKG_DATE}-${RB_VERSION}-${ARCHITECTURES}-${PLATFORM}.tar.gz ../build
 fi
 ls
 ls ../build
