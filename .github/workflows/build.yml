@@ -15,6 +15,9 @@ jobs:
         arch: [x86_64]
       fail-fast: false
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     steps:
 
       - uses: actions/checkout@v3
@@ -25,11 +28,10 @@ jobs:
       - name: build image
         run: ./scripts/build.sh
         env:
-          TRAVELING_RUBY_PKG_DATE: ${{ env.TRAVELING_RUBY_PKG_DATE }}
           TRAVELING_RUBY_PLATFORM: ${{ runner.os }}
           TRAVELING_RUBY_ARCHITECTURE: ${{ matrix.arch }}
       - name: push to dockerhub
-        if: github.ref == 'refs/heads/dockerhub'
+        if: github.ref == 'refs/heads/dockerhub' && runner.os == 'ubuntu-latest'
         run: |
           docker push you54f/traveling-ruby-builder-${{ matrix.arch }}:1.0
         env:
@@ -38,10 +40,11 @@ jobs:
       - name: 'Upload Artifact - linux ${{ matrix.arch }}'
         uses: actions/upload-artifact@v3
         with:
-          path: build
+          name: traveling-ruby-${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}-${{ matrix.arch }}-${{ runner.os }}.tar.gz
+          path: build/traveling-ruby-${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}-${{ matrix.arch }}-${{ runner.os }}.tar.gz
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: build
+          artifacts: build/traveling-ruby-${{ env.PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}-${{ matrix.arch }}-${{ runner.os }}.tar.gz
           tag: "v${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}"
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true

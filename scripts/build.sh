@@ -4,7 +4,8 @@ export RB_VERSION=${TRAVELING_RUBY_RB_VERSION:-3.2.2}
 export ARCHITECTURES=${TRAVELING_RUBY_ARCHITECTURE:-arm64}
 export PKG_DATE=${TRAVELING_RUBY_PKG_DATE:-20230428}
 export PLATFORM=${TRAVELING_RUBY_PLATFORM:-linux}
-
+rm VERSION
+cat $TRAVELING_RUBY_PKG_DATE > VERSION
 case "$PLATFORM" in
     "Darwin")
         export PLATFORM="osx"
@@ -57,7 +58,7 @@ if [[ "$PLATFORM" == "windows" ]]; then
     cp -R traveling-ruby-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-x86.tar.gz ../build
     cp -R traveling-ruby-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-x86_64.tar.gz ../build
 else
-    tar cvzf traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-${ARCHITECTURES}.tar.gz traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-${ARCHITECTURES}/
+    # tar cvzf traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-${ARCHITECTURES}.tar.gz traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-${ARCHITECTURES}/
     cp -R traveling-ruby-gems-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-${ARCHITECTURES}.tar.gz ../build
     cp -R traveling-ruby-${PKG_DATE}-${RB_VERSION}-${PLATFORM}-${ARCHITECTURES}.tar.gz ../build
 fi
