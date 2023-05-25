@@ -43,11 +43,17 @@ jobs:
       - name: 'Upload Artifact - linux ${{ matrix.arch }}'
         uses: actions/upload-artifact@v3
         with:
-          name: traveling-ruby-${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}-${{ matrix.arch }}-${{ env.TRAVELING_RUBY_PLATFORM }}.tar.gz
-          path: build/traveling-ruby-${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}-${{ matrix.arch }}-${{ env.TRAVELING_RUBY_PLATFORM }}.tar.gz
+          name: traveling-ruby-${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}-${{ env.TRAVELING_RUBY_PLATFORM }}-${{ matrix.arch }}.tar.gz
+          path: build/traveling-ruby-${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}-${{ env.TRAVELING_RUBY_PLATFORM }}-${{ matrix.arch }}.tar.gz
+      - name: 'Upload Artifact - linux ${{ matrix.arch }}'
+        if: runner.os != 'windows-latest'
+        uses: actions/upload-artifact@v3
+        with:
+          name: traveling-ruby-gems-${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}-${{ env.TRAVELING_RUBY_PLATFORM }}-${{ matrix.arch }}.tar.gz
+          path: build/traveling-ruby-gems-${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}-${{ env.TRAVELING_RUBY_PLATFORM }}-${{ matrix.arch }}.tar.gz
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: build/traveling-ruby-${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}-${{ matrix.arch }}-${{ env.TRAVELING_RUBY_PLATFORM }}.tar.gz
+          artifacts: build/**
           tag: "v${{ env.TRAVELING_RUBY_PKG_DATE }}-${{ env.TRAVELING_RUBY_RB_VERSION }}"
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true

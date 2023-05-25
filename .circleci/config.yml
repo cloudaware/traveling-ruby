@@ -40,9 +40,12 @@ jobs:
             rake stash_conflicting_paths
             DEVELOPER_DIR=/Library/Developer/CommandLineTools rake --trace
             ls
+      # - store_artifacts:
+      #     path: osx/traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-osx-x86_64.tar.gz
+      #     destination: traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-osx-x86_64.tar.gz
       - store_artifacts:
-          path: osx/traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-osx-x86_64.tar.gz
-          destination: traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-osx-x86_64.tar.gz
+          path: build
+          destination: build
   build-linux-x86_64:
     machine:
       image: ubuntu-2204:2023.02.1
@@ -53,9 +56,12 @@ jobs:
             cd linux
             ARCHITECTURES="x86_64" rake image
             ARCHITECTURES="x86_64" rake
+      # - store_artifacts:
+      #     path: linux/traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-linux-x86_64.tar.gz
+      #     destination: traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-linux-x86_64.tar.gz
       - store_artifacts:
-          path: linux/traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-linux-x86_64.tar.gz
-          destination: traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-linux-x86_64.tar.gz
+          path: build
+          destination: build
   build-linux-arm64:
     machine:
       image: ubuntu-2204:2023.02.1
@@ -68,8 +74,11 @@ jobs:
             ARCHITECTURES="arm64" rake image
             ARCHITECTURES="arm64" rake
       - store_artifacts:
-          path: linux/traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-linux-arm64.tar.gz
-          destination: traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-linux-arm64.tar.gz
+          path: build
+          destination: build
+      # - store_artifacts:
+      #     path: linux/traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-linux-arm64.tar.gz
+      #     destination: traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-linux-arm64.tar.gz
   build-windows:
     machine:
       image: 'windows-server-2022-gui:current'
@@ -89,18 +98,18 @@ jobs:
               sh -c './build-ruby -a x86 -r << pipeline.parameters.RB_VERSION >> cache output/<< pipeline.parameters.RB_VERSION >>'
               sh -c './package -r traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-x86-windows.tar.gz output/<< pipeline.parameters.RB_VERSION >>'
               sh -c 'ls'
+      # - store_artifacts:
+      #     path: windows/traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-x86_64-windows.tar.gz
+      #     destination: traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-x86_64-windows.tar.gz
       - store_artifacts:
-          path: windows/traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-x86_64-windows.tar.gz
-          destination: traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-x86_64-windows.tar.gz
-      - store_artifacts:
-          path: windows/traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-x86-windows.tar.gz
-          destination: traveling-ruby-<< pipeline.parameters.PKG_DATE >>-<< pipeline.parameters.RB_VERSION >>-x86-windows.tar.gz
+          path: build
+          destination: build
   publish:
     docker:
       - image: circleci/golang:1.8
     steps:
     - attach_workspace:
-        at: .
+        at: build
     - run:
         name: "Publish Release on GitHub"
         command: |
