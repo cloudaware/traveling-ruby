@@ -24,9 +24,9 @@ DIR="$1"
 TAB=`perl -e 'print "\t"'`
 ERROR=false
 # Note added liblzma
-export STANDARD_LIBS="(@executable_path/|@rpath/|/usr/lib/libobjc|/usr/lib/libSystem|/usr/lib/libutil|/usr/lib/libz|/usr/lib/liblzma"
+export STANDARD_LIBS="(@executable_path/|@rpath/|/usr/lib/libobjc|/usr/lib/libSystem|/usr/lib/libutil|/usr/lib/libz)"
 export STANDARD_LIBS="$STANDARD_LIBS|/usr/lib/libiconv|/usr/lib/libstdc\+\+|/usr/lib/libc\+\+\."
-export STANDARD_LIBS="$STANDARD_LIBS|CoreFoundation|CoreServices|/Foundation\.framework/|/Security\.framework/)"
+export STANDARD_LIBS="$STANDARD_LIBS|CoreFoundation|CoreServices|/Foundation\.framework/|/Security\.framework/|IOKit)"
 
 for F in $DIR/bin.real/ruby `find $DIR -name '*.bundle'` `find $DIR -name '*.dylib'`; do
 	EXTRA_LIBS=`otool -L $F | tail -n +2 | sed "s/^${TAB}//" | sed "s/ (.*//" | grep_without_fail -vE "$STANDARD_LIBS"`

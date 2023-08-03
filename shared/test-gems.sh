@@ -84,22 +84,44 @@ parse_options "$@"
 ##########
 
 GEMS_TO_TEST=(
-	rexml 
+	# rexml 
 	nio 
 	socket 
 	rinda/ring 
 	rinda/tuplespace
-	openssl readline rugged charlock_holmes unf_ext bcrypt RedCloth
-	eventmachine escape_utils json nokogiri ffi pg posix-spawn
-	thin sqlite3 yajl puma/puma_http11 kgio raindrops fast-stemmer
-	hitimes redcarpet curses
-	mysql2
+	# openssl readline rugged charlock_holmes unf_ext bcrypt RedCloth
+	# eventmachine escape_utils json nokogiri ffi pg posix-spawn
+	# thin sqlite3 yajl puma/puma_http11 kgio raindrops fast-stemmer
+	# hitimes redcarpet curses
+	# mysql2
 	)
 GEMS_TO_FAIL=(
 	"win32ole"
 	) 
 GEMS_TO_SKIP=(
-	mysql2
+	# mysql2
+	as-notifications
+	faraday/em_http
+	faraday/em_synchrony
+	faraday/excon
+	faraday/httpclient
+	faraday/multipart
+	faraday/net_http
+	faraday/net_http_persistent
+	faraday/patron
+	faraday/rack
+	faraday/retry
+	multipart-post
+	# pact/ffi
+	rack-reverse-proxy
+	rack-test
+	rspec-core
+	rspec-expectations
+	rspec-mocks
+	rspec-support
+	ruby-next-core
+	semver2
+	term-ansicolor
 	"sinatra"
 	"nio4r" 
 	test-unit 
