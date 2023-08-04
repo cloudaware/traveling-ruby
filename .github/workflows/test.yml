@@ -45,7 +45,8 @@ jobs:
           ruby --version
           which ruby
           brew uninstall ruby@3.0
-          
+      - uses: actions/checkout@v3
+         
       - id: traveling-ruby-action
         uses: you54f/traveling-ruby@traveling-pact
 
