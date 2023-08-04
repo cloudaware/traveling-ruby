@@ -12,7 +12,8 @@ jobs:
       matrix:
         os: [macos-latest]
         shell: [bash, sh]
-        ruby-version: [3.0.6,3.1.4,3.2.2,3.3.0-preview1]
+        ruby-version: [3.2.2]
+        # ruby-version: [3.0.6,3.1.4,3.2.2,3.3.0-preview1]
       fail-fast: false
     defaults:
       run:
@@ -39,7 +40,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         shell: [bash, sh]
-        ruby-version: [2.6.10,3.0.4,3.1.2,3.2.2,3.3.0-preview1]
+        ruby-version: [3.2.2]
+        # ruby-version: [2.6.10,3.0.4,3.1.2,3.2.2,3.3.0-preview1]
       fail-fast: false
     defaults:
       run:

@@ -104,7 +104,17 @@ if
 	[[ "$RUBY_PACKAGE_FULL" == "true" ]]
 then
 	header "Packaging Ruby with full gem set and extensions..."
-	run tar -cf "$RUBY_PACKAGE.tmp" -C "$BUILD_OUTPUT_DIR" .
+	# excluding suckerpunch for pact broker
+	run tar -cf "$RUBY_PACKAGE.tmp" -C "$BUILD_OUTPUT_DIR" \
+		--exclude "lib/ruby/gems/$RUBY_COMPAT_VERSION/gems/sucker_punch-2.1.2/lib/sucker_punch/core_ext.rb" \
+		.
+	# patching suckerpunch singleton method
+	header "Packaging User Packaging folder..."
+	run mkdir -p "$SELFDIR/packaging/lib/vendor"
+	run cp "$SELFDIR/gemfiles/20230803/Gemfile.lock" "$SELFDIR/packaging/lib/vendor"
+	run tar -uf "$RUBY_PACKAGE.tmp" -C "$SELFDIR/packaging" .
+
+	# gzip the package
 	echo "+ gzip --best --no-name -c $RUBY_PACKAGE.tmp > $RUBY_PACKAGE"
 	gzip --best --no-name -c "$RUBY_PACKAGE.tmp" > "$RUBY_PACKAGE"
 	run rm "$RUBY_PACKAGE.tmp"
@@ -117,7 +127,14 @@ elif [[ "$RUBY_PACKAGE" != "" ]]; then
 		--exclude "lib/ruby/gems/$RUBY_COMPAT_VERSION/gems/*" \
 		--exclude "lib/ruby/gems/$RUBY_COMPAT_VERSION/specifications/*" \
 		--exclude "lib/ruby/gems/$RUBY_COMPAT_VERSION/deplibs/*" \
+		--exclude "lib/ruby/gems/$RUBY_COMPAT_VERSION/gems/sucker_punch-2.1.2/lib/sucker_punch/core_ext.rb" \
 		.
+	# patching suckerpunch singleton method
+	header "Packaging User Packaging folder..."
+	run mkdir -p "$SELFDIR/packaging/lib/vendor"
+	run cp "$SELFDIR/gemfiles/20230803/Gemfile.lock" "$SELFDIR/packaging/lib/vendor"
+	run tar -uf "$RUBY_PACKAGE.tmp" -C "$SELFDIR/packaging" .
+
 	run tar -rf "$RUBY_PACKAGE.tmp" -C "$BUILD_OUTPUT_DIR" \
 		"./lib/ruby/gems/$RUBY_COMPAT_VERSION/gems/bundler-$BUNDLER_VERSION" \
 		"./lib/ruby/gems/$RUBY_COMPAT_VERSION/specifications/bundler-$BUNDLER_VERSION.gemspec" \

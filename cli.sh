@@ -26,6 +26,8 @@ set -e
 PROJECT_NAME='traveling-ruby'
 TRAVELING_RUBY_GH_SOURCE=YOU54F/${PROJECT_NAME}
 TRAVELING_RUBY_VERSION=${TRAVELING_RUBY_VERSION:-3.2.2}
+TRAVELING_RUBY_PKG_DATE=${TRAVELING_RUBY_PKG_DATE:-'20230803'}
+TRAVELING_RUBY_RELEASE_TAG=${TRAVELING_RUBY_RELEASE_TAG:-'rel-20230803-pact'}
 
 usage() {
   echo "Usage: $0 [-v <version>] [-d <release-date>] [--set-path] [--clean-install] [--ci]"
@@ -122,10 +124,11 @@ case $(uname -sm) in
   ;;
 esac
 
+# https://github.com/YOU54F/traveling-ruby/releases/download/rel-20230803-pact/traveling-pact-20230803-3.2.2-osx-arm64-full.tar.gz
 TRAVELING_RUBY_PLATFORM="${TRAVELING_RUBY_OS}-${TRAVELING_RUBY_ARCH}"
 TRAVELING_RUBY_INSTALL_PATH="${TRAVELING_RUBY_INSTALL_PATH:-$HOME/.travelling-ruby}"
-TRAVELING_RUBY_BASENAME=traveling-ruby-${TRAVELING_RUBY_PKG_DATE}-${TRAVELING_RUBY_VERSION}-${TRAVELING_RUBY_PLATFORM}
-TRAVELING_RUBY_FILENAME="${TRAVELING_RUBY_BASENAME}.tar.gz"
+TRAVELING_RUBY_BASENAME=traveling-pact-${TRAVELING_RUBY_PKG_DATE}-${TRAVELING_RUBY_VERSION}-${TRAVELING_RUBY_PLATFORM}
+TRAVELING_RUBY_FILENAME="${TRAVELING_RUBY_BASENAME}-full.tar.gz"
 TRAVELING_RUBY_BIN_PATH="${TRAVELING_RUBY_INSTALL_PATH}/bin"
 echo "-------------"
 echo "TRAVELING_RUBY_PKG_DATE: $TRAVELING_RUBY_PKG_DATE"
@@ -154,7 +157,6 @@ echo curl --fail -LO https://github.com/${TRAVELING_RUBY_GH_SOURCE}/releases/dow
 (curl --fail -LO https://github.com/${TRAVELING_RUBY_GH_SOURCE}/releases/download/"${TRAVELING_RUBY_RELEASE_TAG}"/"${TRAVELING_RUBY_FILENAME}" && echo downloaded "${TRAVELING_RUBY_FILENAME}") || (echo "Sorry, you'll need to install the ${PROJECT_NAME} manually." && exit 1)
 (tar xzf "${TRAVELING_RUBY_FILENAME}" && echo unarchived "${TRAVELING_RUBY_FILENAME}") || (echo "Sorry, you'll need to unarchived ${PROJECT_NAME} manually." && exit 1)
 (rm "${TRAVELING_RUBY_FILENAME}" && echo removed "${TRAVELING_RUBY_FILENAME}") || (echo "Sorry, you'll need to remove ${PROJECT_NAME} archive manually." && exit 1)
-
 echo "${PROJECT_NAME} ${TRAVELING_RUBY_RELEASE_TAG} installed to $TRAVELING_RUBY_INSTALL_PATH"
 echo "-------------------"
 echo "Successfully installed ${PROJECT_NAME} to:"

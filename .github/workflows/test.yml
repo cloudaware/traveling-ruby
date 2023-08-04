@@ -1,4 +1,4 @@
-name: Test you54f/traveling-ruby@main
+name: Test you54f/traveling-ruby@traveling-pact
 
 on: 
   workflow_dispatch:
@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - id: traveling-ruby-action
-        uses: you54f/traveling-ruby@main
+        uses: you54f/traveling-ruby@traveling-pact
 
       - name: bash
         run: ruby --version
@@ -47,7 +47,7 @@ jobs:
           brew uninstall ruby@3.0
           
       - id: traveling-ruby-action
-        uses: you54f/traveling-ruby@main
+        uses: you54f/traveling-ruby@traveling-pact
 
       - name: bash
         run: ruby --version
@@ -64,7 +64,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - id: traveling-ruby-action
-        uses: you54f/traveling-ruby@main
+        uses: you54f/traveling-ruby@traveling-pact
 
       - name: bash
         run: ruby --version

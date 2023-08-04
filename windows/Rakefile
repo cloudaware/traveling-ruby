@@ -32,7 +32,7 @@ ARCHITECTURES.each do |arch|
 
   RUBY_VERSIONS.each do |ruby_version|
     begin
-    package = "traveling-ruby-#{VERSION}-#{ruby_version}-windows-#{arch}.tar.gz"
+    package = "traveling-pact-#{VERSION}-#{ruby_version}-windows-#{arch}.tar.gz"
 
     task :package => "package:#{arch}:#{ruby_version}"
     task :build   => "build:#{ruby_version}"

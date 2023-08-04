@@ -3,15 +3,15 @@
 # ./scripts/build-docker-images.sh -m -p -v 3.3.0-preview1
 
 # Define the default values for the arguments
-DEFAULT_TRAVELING_RUBY_VERSION=2.6.10
+DEFAULT_TRAVELING_RUBY_VERSION=3.2.2
 DEFAULT_TRAVELING_RUBY_PKG_DATE=20230803
-DEFAULT_TRAVELING_RUBY_GH_SOURCE=YOU54F/traveling-ruby
-DOCKER_IMAGE_ORG_AND_NAME="you54f/traveling-ruby"
+DEFAULT_TRAVELING_RUBY_GH_SOURCE=YOU54F/traveling-pact
+DOCKER_IMAGE_ORG_AND_NAME="you54f/traveling-pact"
 
 # Define the usage function
 usage() {
   echo "Usage: $0 [OPTIONS]"
-  echo "Builds a Docker image for Traveling Ruby."
+  echo "Builds a Docker image for Traveling pact."
   echo ""
   echo "Options:"
   echo "  -h, --help                        Show this help message and exit."

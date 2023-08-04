@@ -309,7 +309,7 @@ run rm -rf /tmp/ruby/lib/ruby/gems/$RUBY_COMPAT_VERSION/gems/*/ext/*/*.{c,h}
 # removes rugged libgit2 vendor folder
 find /tmp/ruby/lib/ruby/gems/$RUBY_COMPAT_VERSION/gems/*/vendor | xargs rm -rf
 find /tmp/ruby/lib/ruby/gems/$RUBY_COMPAT_VERSION/gems/* -path '*/ports/*' | xargs rm -rf
-find /tmp/ruby/lib/ruby/gems/$RUBY_COMPAT_VERSION/gems/* -name '*.so' | xargs rm -rf
+find /tmp/ruby/lib/ruby/gems/$RUBY_COMPAT_VERSION/gems/* -name '*.so' -not -path "/tmp/ruby/lib/ruby/gems/$RUBY_COMPAT_VERSION/gems/pact-ffi-*/*" | xargs rm -rf
 find /tmp/ruby/lib/ruby/gems/$RUBY_COMPAT_VERSION/gems/*/ext/*/tmp | xargs rm -rf
 find /tmp/ruby/lib/ruby/gems/$RUBY_COMPAT_VERSION/gems/*/ext| xargs rm -rf
 find /tmp/ruby/lib/ruby/gems/$RUBY_COMPAT_VERSION/gems/*/contrib | xargs rm -rf

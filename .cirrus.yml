@@ -1,7 +1,7 @@
 env:
   REPO: you54f/traveling-ruby
   PKG_DATE: 20230803
-  NEXT_TAG: rel-$PKG_DATE
+  NEXT_TAG: rel-$PKG_DATE-pact
   GITHUB_TOKEN: ENCRYPTED[7f3663f35400d0e1f8e0fec456af6b75a07b0fd2d0632fe1697b8fb73af5e78245144216288d88d2daa681ccd159e07d]
 
 INSTALL_GH_CLI: &INSTALL_GH_CLI
@@ -21,7 +21,7 @@ PRE_RELEASE_TASK: &PRE_RELEASE_TASK
 UPLOAD_TASK: &UPLOAD_TASK
   upload_script: |
     cd $PLATFORM
-    for file in $(find traveling-ruby-gems-* -name '*.gz'); do
+    for file in $(find traveling-pact-gems-* -name '*.gz'); do
       gem_name=$(echo "${file%-*}" | tr '/' '-')
       gem_version=$(echo "${file%.tar.gz}" | awk -F- '{print $NF}')
       pkg_date=$(echo "${file%-*}" | cut -d'-' -f4)
@@ -30,8 +30,8 @@ UPLOAD_TASK: &UPLOAD_TASK
       cp "$file" $ruby_version-$gem_version.tar.gz
     done
     ls -l
-    if [[ $CIRRUS_BRANCH == 'main' ]]; then
-      gh release upload "${NEXT_TAG}" traveling-ruby-*.tar.gz --repo "${REPO}" --clobber
+    if [[ $CIRRUS_BRANCH == 'traveling-pact' ]]; then
+      gh release upload "${NEXT_TAG}" traveling-pact-*.tar.gz --repo "${REPO}" --clobber
     else
       echo "Not on main branch, skipping upload"
     fi
@@ -232,10 +232,10 @@ cirrus_cli_setup: &cirrus_cli_setup
     echo "removing runtime and output folder"
     find "$PLATFORM" -type d -name "output" -exec rm -rf {} +
     find "$PLATFORM" -type d -name "runtime" -exec rm -rf {} +
-    echo "removing traveling-ruby packaged gems"
-    find "$PLATFORM" -type d -name "traveling-ruby-gems" -exec rm -rf {} +
-    echo "removing traveling-ruby packaged runtimes"
-    find "$PLATFORM" -type f -name "traveling-ruby-*.tar.gz" -exec rm -f {} +
+    echo "removing traveling-pact packaged gems"
+    find "$PLATFORM" -type d -name "traveling-pact-gems" -exec rm -rf {} +
+    echo "removing traveling-pact packaged runtimes"
+    find "$PLATFORM" -type f -name "traveling-pact-*.tar.gz" -exec rm -f {} +
     echo "removing existing runtime if it exists"
     find "$PLATFORM" -type f -name "$PLATFORM-runtime.tar.gz" -exec rm -f {} +
     
@@ -479,7 +479,7 @@ linux_gem_test_task:
     gh release view --repo "${REPO}" "${NEXT_TAG}" --json assets -q '.[]|.[].name' | grep -e 'linux-arm'
     ls -la
     cd linux
-    gh release download --repo "${REPO}" "${NEXT_TAG}" -p "traveling-ruby-${PKG_DATE}*linux-arm*"
+    gh release download --repo "${REPO}" "${NEXT_TAG}" -p "traveling-pact-${PKG_DATE}*linux-arm*"
     ls -la
     ../shared/list-versions.sh linux
     ../shared/unpack-versions.sh linux
