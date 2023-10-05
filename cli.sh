@@ -3,9 +3,9 @@ set -e
 ## Tested with https://www.shellcheck.net/
 
 # Usage: (install latest release & latest ruby version)
-#   $ curl -fsSL https://raw.githubusercontent.com/you54f/traveling-ruby/main/install.sh | sh
+#   $ curl -fsSL https://raw.githubusercontent.com/you54f/traveling-ruby/traveling-pact/cli.sh | sh
 # or
-#   $ wget -q https://raw.githubusercontent.com/you54f/traveling-ruby/main/install.sh -O- | sh
+#   $ wget -q https://raw.githubusercontent.com/you54f/traveling-ruby/traveling-pact/cli.sh -O- | sh
 
 # Options
 # TRAVELING_RUBY_VERSION - set ruby version eg TRAVELING_RUBY_VERSION=2.7.3
@@ -126,7 +126,7 @@ esac
 
 # https://github.com/YOU54F/traveling-ruby/releases/download/rel-20230803-pact/traveling-pact-20230803-3.2.2-osx-arm64-full.tar.gz
 TRAVELING_RUBY_PLATFORM="${TRAVELING_RUBY_OS}-${TRAVELING_RUBY_ARCH}"
-TRAVELING_RUBY_INSTALL_PATH="${TRAVELING_RUBY_INSTALL_PATH:-$HOME/.travelling-ruby}"
+TRAVELING_RUBY_INSTALL_PATH="${TRAVELING_RUBY_INSTALL_PATH:-$HOME/.pact}"
 TRAVELING_RUBY_BASENAME=traveling-pact-${TRAVELING_RUBY_PKG_DATE}-${TRAVELING_RUBY_VERSION}-${TRAVELING_RUBY_PLATFORM}
 TRAVELING_RUBY_FILENAME="${TRAVELING_RUBY_BASENAME}-full.tar.gz"
 TRAVELING_RUBY_BIN_PATH="${TRAVELING_RUBY_INSTALL_PATH}/bin"
