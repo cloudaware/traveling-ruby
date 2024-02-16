@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
-
+if [[ "$RUBY_VERSION" < "3.0" ]]; then
+    BUNDLER_VERSION="2.4.22"
+fi
 # shellcheck source=shared/library.sh
 source /system_shared/library.sh
 
@@ -88,6 +90,16 @@ echo
 
 # shellcheck disable=SC1091
 source /hbb_shlib/activate
+
+# Required for OpenSSL as it is stored in /hbb_shlib/lib64
+if [ "$(uname -m)" = "x86_64" ]; then
+	export LDFLAGS="$LDFLAGS -L/hbb_shlib/lib64"
+	export SHLIB_LDFLAGS="$SHLIB_LDFLAGS -L/hbb_shlib/lib64"
+	export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/hbb_shlib/lib64/pkgconfig"
+fi
+
+
+run openssl version
 # -fvisibility=hidden interferes with native extension compilation
 export CFLAGS="${CFLAGS//-fvisibility=hidden/}"
 export CXXFLAGS="${CXXFLAGS//-fvisibility=hidden/}"
@@ -107,7 +119,7 @@ if [[ ! -e /ruby-$RUBY_VERSION.tar.gz ]]; then
 	header "Downloading Ruby source"
 	run rm -f /ruby-$RUBY_VERSION.tar.gz.tmp
 	run wget -O /ruby-$RUBY_VERSION.tar.gz.tmp \
-		http://cache.ruby-lang.org/pub/ruby/$RUBY_MAJOR_MINOR/ruby-$RUBY_VERSION.tar.gz
+		https://cache.ruby-lang.org/pub/ruby/$RUBY_MAJOR_MINOR/ruby-$RUBY_VERSION.tar.gz
 	run mv /ruby-$RUBY_VERSION.tar.gz.tmp /ruby-$RUBY_VERSION.tar.gz
 	echo
 fi
@@ -135,7 +147,12 @@ fi
 
 if $COMPILE; then
 	header "Compiling"
-	run sed -i 's|dir_config("openssl")|$libs << " -lz "; dir_config("openssl")|' ext/openssl/extconf.rb
+	if [[ $RUBY_MAJOR -lt 3 || $RUBY_MAJOR -eq 3 && $RUBY_MINOR -lt 3 ]]; then
+		run sed -i 's|dir_config("openssl")|$libs << " -lz "; dir_config("openssl")|' ext/openssl/extconf.rb
+	else
+	# https://github.com/ruby/ruby/commit/8dd5c20224771abacfcfba848d9465131f14f3fe
+		run sed -i 's|ssl_dirs.any?|$libs << " -lz "; dir_config("openssl").any?|' ext/openssl/extconf.rb
+	fi
 	# Do not link to ncurses. We want it to link to libtermcap instead, which is much smaller.
 	if [[ $RUBY_MAJOR -lt 3 || $RUBY_MAJOR -eq 3 && $RUBY_MINOR -lt 3 ]]; then
 		echo overwriting ext/readline/extconf.rb as a workaround for https://bugs.ruby-lang.org/issues/17123

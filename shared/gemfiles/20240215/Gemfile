@@ -19,7 +19,7 @@ source 'https://rubygems.org'
 # gem 'unf_ext'
 # gem 'unicorn', force_ruby_platform: true
 # ## Pact specific gems
-gem 'ffi'
+# gem 'ffi'
 gem 'pg', force_ruby_platform: true
 gem 'puma', force_ruby_platform: true
 gem "sqlite3", force_ruby_platform: true
@@ -31,4 +31,5 @@ gem 'pact-provider-verifier'
 gem 'pact_broker-client'
 gem 'pact_broker'
 gem 'pact-message'
-gem 'pact-ffi'
+# gem 'pact-ffi'
+gem 'mysql2', force_ruby_platform: true
