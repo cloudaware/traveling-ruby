@@ -8,7 +8,7 @@ INSTALL_GH_CLI: &INSTALL_GH_CLI
   install_gh_cli_script: |
     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
     && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable traveling-pact-next" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
     && apt update \
     && apt install gh -y
 
@@ -33,7 +33,7 @@ UPLOAD_TASK: &UPLOAD_TASK
     if [[ $CIRRUS_BRANCH == 'traveling-pact-next' ]]; then
       gh release upload "${NEXT_TAG}" traveling-pact-*.tar.gz --repo "${REPO}" --clobber
     else
-      echo "Not on main branch, skipping upload"
+      echo "Not on traveling-pact-next branch, skipping upload"
     fi
 
 DOWNLOAD_TASK: &DOWNLOAD_TASK
@@ -198,7 +198,7 @@ linux_x64_packager_docker_builder:
 linux_arm64_matrix_docker_builder:
   cpu: 4
   memory: 4G
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-arm64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'main'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-arm64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'traveling-pact-next'
   env:
     CIRRUS_ARCH: arm64
     PLATFORM: linux
@@ -214,7 +214,7 @@ linux_arm64_matrix_docker_builder:
 linux_x64_matrix_docker_builder:
   cpu: 4
   memory: 4G
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-x86_64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'main'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-x86_64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'traveling-pact-next'
   env:
     CIRRUS_ARCH: amd64
     PLATFORM: linux
@@ -230,7 +230,7 @@ linux_x64_matrix_docker_builder:
 linux_arm64_alpine_matrix_docker_builder:
   cpu: 4
   memory: 4G
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-musl-arm64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(alpine\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'main'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-musl-arm64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(alpine\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'traveling-pact-next'
   env:
     CIRRUS_ARCH: arm64
     PLATFORM: alpine
@@ -246,7 +246,7 @@ linux_arm64_alpine_matrix_docker_builder:
 linux_x64_alpine_matrix_docker_builder:
   cpu: 4
   memory: 4G
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-musl-x86_64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(alpine\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'main'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-musl-x86_64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(alpine\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'traveling-pact-next'
   env:
     CIRRUS_ARCH: amd64
     PLATFORM: alpine
@@ -369,7 +369,7 @@ macos_packager_task:
 
 
 macos_arm64_matrix_task:
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos-arm64\).*' || $CIRRUS_BRANCH =~ 'main'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos-arm64\).*' || $CIRRUS_BRANCH =~ 'traveling-pact-next'
   macos_instance:
     # image: traveling-ruby-builder
     # image: ghcr.io/cirruslabs/macos-ventura-vanilla:latest
@@ -390,7 +390,7 @@ macos_arm64_matrix_task:
 
 macos_x86_64_matrix_task:
   timeout_in: 120m
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos-x86_64\).*' || $CIRRUS_BRANCH =~ 'main'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos-x86_64\).*' || $CIRRUS_BRANCH =~ 'traveling-pact-next'
   macos_instance:
     # image: traveling-ruby-builder
     image: ghcr.io/cirruslabs/macos-sonoma-base:latest
@@ -415,7 +415,7 @@ macos_x86_64_matrix_task:
 # ========================================
 
 windows_packager_task: 
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(packager-windows\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(packager\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'main'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(packager-windows\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(packager\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'traveling-pact-next'
   env:
     PLATFORM: windows
     matrix:
@@ -531,7 +531,7 @@ linux_gem_test_task:
 install_homebrew_script: &install_homebrew_script |
   # curl required for downloader, build-essential/git required for linuxbrew
   apt update && apt install --yes curl build-essential git 
-  curl -fsSL https://raw.githubusercontent.com/you54f/traveling-ruby/main/cli.sh | sh -s -- --ci -v 2.6.10
+  curl -fsSL https://raw.githubusercontent.com/you54f/traveling-ruby/traveling-pact-next/cli.sh | sh -s -- --ci -v 2.6.10
   echo 'export PATH=/root/.travelling-ruby/bin:${PATH}' >> /root/.profile
   source /root/.profile
   ruby --version
