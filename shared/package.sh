@@ -6,7 +6,7 @@ SELFDIR=`cd "$SELFDIR" && pwd`
 source "$SELFDIR/library.sh"
 BUNDLER_VERSION=`cat "$SELFDIR/../BUNDLER_VERSION.txt"`
 if [[ "$RUBY_VERSIONS" < "3.0.0" ]]; then
-    BUNDLER_VERSION="2.4.22"
+    BUNDLER_VERSION="2.5.3"
 fi
 BUILD_OUTPUT_DIR=
 RUBY_PACKAGE=

@@ -14,7 +14,7 @@ Just some WIP notes to keep some track of testing progress
 
 - 3.0.x and below builds require openssl 1.1.1
   - Set `OPENSSL_1_1_LEGACY` to build OpenSSL 1.1.1 for macos.
-- Linux 2.6.10 - Requires bundler version 2.4.x (latest 2.4.22 at time of writing)
+- Linux 2.6.10 - Requires bundler version 2.4.x (latest 2.5.3 at time of writing)
 
 ### Ruby Versions failing to build
 
