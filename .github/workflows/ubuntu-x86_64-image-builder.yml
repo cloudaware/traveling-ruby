@@ -3,9 +3,9 @@ name: Linux - x86_64 - image builder
 on:
   workflow_dispatch:
   # push:
-  #   branches: [ main ]
+  #   branches: [ traveling-pact-next ]
   # pull_request:
-  #   branches: [ main ]
+  #   branches: [ traveling-pact-next ]
 
 jobs:
   make-ubuntu-x86_64-image:

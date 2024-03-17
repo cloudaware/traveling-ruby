@@ -1,9 +1,9 @@
 name: Windows
 on:
   push:
-    branches: [ main ]
+    branches: [ traveling-pact-next ]
   pull_request:
-    branches: [ main ]
+    branches: [ traveling-pact-next ]
 
 env:
   PKG_DATE: 20240317

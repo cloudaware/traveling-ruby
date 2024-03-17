@@ -3,7 +3,7 @@ name: Test you54f/traveling-pact@traveling-pact
 on: 
   workflow_dispatch:
   # push:
-  #   branches: [ main ]
+  #   branches: [ traveling-pact-next ]
   
 jobs:
 

@@ -3,9 +3,9 @@ name: Alpine Musl - arm64 - build from dockerhub builder
 on:
   workflow_dispatch:
   push:
-    branches: [ main, alpine ]
+    branches: [ traveling-pact-next, alpine ]
   # pull_request:
-  #   branches: [ main ]
+  #   branches: [ traveling-pact-next ]
 
 env:
   PKG_DATE: 20240317
