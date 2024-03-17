@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 env:
-  PKG_DATE: 20240215
+  PKG_DATE: 20240317
 
 jobs:
   make-alpine-x86_64:
@@ -38,8 +38,8 @@ jobs:
       - name: 'Upload Artifact - linux x86_64'
         uses: actions/upload-artifact@v3
         with:
-          name: traveling-ruby-${{ env.PKG_DATE }}-${{ matrix.ruby-version }}-linux-musl-x86_64.tar.gz
-          path: alpine/traveling-ruby*.tar.gz
+          name: traveling-pact-${{ env.PKG_DATE }}-${{ matrix.ruby-version }}-linux-musl-x86_64.tar.gz
+          path: alpine/traveling-pact*.tar.gz
       - name: test
         run: |
             cd alpine

@@ -1,4 +1,4 @@
-name: Test you54f/traveling-ruby@traveling-pact
+name: Test you54f/traveling-pact@traveling-pact
 
 on: 
   workflow_dispatch:
@@ -9,7 +9,7 @@ jobs:
 
   linux:
     runs-on: ubuntu-latest
-    name: test traveling-ruby action on Linux
+    name: test traveling-pact action on Linux
     steps:
       - name: remove system installed ruby & linuxbrew from Linux
         if: env.ACT != 'true' && runner.os == 'Linux'

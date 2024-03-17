@@ -9,14 +9,14 @@ set -e
 
 # Options
 # TRAVELING_RUBY_VERSION - set ruby version eg TRAVELING_RUBY_VERSION=2.7.3
-# TRAVELING_RUBY_RELEASE_TAG - set release tag eg TRAVELING_RUBY_RELEASE_TAG=rel20240215
+# TRAVELING_RUBY_RELEASE_TAG - set release tag eg TRAVELING_RUBY_RELEASE_TAG=rel20240317
 # TRAVELING_RUBY_INSTALL_PATH - set install path eg TRAVELING_RUBY_INSTALL_PATH=$HOME/.travelling-ruby
 # TRAVELING_RUBY_CLEAN_INSTALL - set to true to remove existing install eg TRAVELING_RUBY_CLEAN_INSTALL=true
 
 # Usage: (install fixed version of a release) -
-#   $ curl -fsSL https://raw.githubusercontent.com/you54f/traveling-ruby/main/install.sh | TRAVELING_RUBY_RELEASE_TAG=rel-20240215 sh
+#   $ curl -fsSL https://raw.githubusercontent.com/you54f/traveling-ruby/main/install.sh | TRAVELING_RUBY_RELEASE_TAG=rel-20240317 sh
 # or
-#   $ wget -q https://raw.githubusercontent.com/you54f/traveling-ruby/main/install.sh -O- | TRAVELING_RUBY_RELEASE_TAG=rel-20240215 sh
+#   $ wget -q https://raw.githubusercontent.com/you54f/traveling-ruby/main/install.sh -O- | TRAVELING_RUBY_RELEASE_TAG=rel-20240317 sh
 
 # Usage: (install fixed version of ruby) -
 #   $ curl -fsSL https://raw.githubusercontent.com/you54f/traveling-ruby/main/install.sh | TRAVELING_RUBY_VERSION=2.6.10 sh
@@ -26,8 +26,8 @@ set -e
 PROJECT_NAME='traveling-ruby'
 TRAVELING_RUBY_GH_SOURCE=YOU54F/${PROJECT_NAME}
 TRAVELING_RUBY_VERSION=${TRAVELING_RUBY_VERSION:-3.2.3}
-TRAVELING_RUBY_PKG_DATE=${TRAVELING_RUBY_PKG_DATE:-'20230803'}
-TRAVELING_RUBY_RELEASE_TAG=${TRAVELING_RUBY_RELEASE_TAG:-'rel-20230803-pact'}
+TRAVELING_RUBY_PKG_DATE=${TRAVELING_RUBY_PKG_DATE:-'20240317'}
+TRAVELING_RUBY_RELEASE_TAG=${TRAVELING_RUBY_RELEASE_TAG:-'rel-20240317-pact'}
 
 usage() {
   echo "Usage: $0 [-v <version>] [-d <release-date>] [--set-path] [--clean-install] [--ci]"
@@ -124,7 +124,7 @@ case $(uname -sm) in
   ;;
 esac
 
-# https://github.com/YOU54F/traveling-ruby/releases/download/rel-20230803-pact/traveling-pact-20230803-3.2.2-osx-arm64-full.tar.gz
+# https://github.com/YOU54F/traveling-ruby/releases/download/rel-20240317-pact/traveling-pact-20240317-3.2.2-osx-arm64-full.tar.gz
 TRAVELING_RUBY_PLATFORM="${TRAVELING_RUBY_OS}-${TRAVELING_RUBY_ARCH}"
 TRAVELING_RUBY_INSTALL_PATH="${TRAVELING_RUBY_INSTALL_PATH:-$HOME/.pact}"
 TRAVELING_RUBY_BASENAME=traveling-pact-${TRAVELING_RUBY_PKG_DATE}-${TRAVELING_RUBY_VERSION}-${TRAVELING_RUBY_PLATFORM}

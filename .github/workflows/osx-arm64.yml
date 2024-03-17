@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 env:
-  PKG_DATE: 20240215
+  PKG_DATE: 20240317
   PLATFORM: osx
   ARCHITECTURES: arm64
   DEVELOPER_DIR: /Applications/Xcode_14.3.1.app/Contents/Developer
@@ -54,8 +54,8 @@ jobs:
       - name: 'Upload Artifact- osx arm64'
         uses: actions/upload-artifact@v3
         with:
-          name: traveling-ruby-${{ env.PKG_DATE }}-${{ matrix.ruby-version }}-osx-arm64.tar.gz
-          path: osx/traveling-ruby*.tar.gz
+          name: traveling-pact-${{ env.PKG_DATE }}-${{ matrix.ruby-version }}-osx-arm64.tar.gz
+          path: osx/traveling-pact*.tar.gz
       - name: test
         run: |
             cd osx

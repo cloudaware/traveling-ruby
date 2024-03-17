@@ -1,7 +1,7 @@
 #!/bin/sh
 
 cd $PLATFORM
-for file in $(find traveling-ruby-gems-* -name '*.gz'); do
+for file in $(find traveling-pact-gems-* -name '*.gz'); do
   gem_name=$(echo "${file%-*}" | tr '/' '-')
   gem_version=$(echo "${file%.tar.gz}" | awk -F- '{print $NF}')
   pkg_date=$(echo "${file%-*}" | cut -d'-' -f4)

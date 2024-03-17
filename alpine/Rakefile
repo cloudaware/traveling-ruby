@@ -81,9 +81,9 @@ ARCHITECTURES.each do |arch|
 
 
   RUBY_VERSIONS.each do |ruby_version|
-    package = "traveling-ruby-#{VERSION}-#{ruby_version}-linux-musl-#{arch}.tar.gz"
-    package_full = "traveling-ruby-#{VERSION}-#{ruby_version}-linux-musl-#{arch}-full.tar.gz"
-    gem_dir = "traveling-ruby-gems-#{VERSION}-#{ruby_version}-linux-musl-#{arch}"
+    package = "traveling-pact-#{VERSION}-#{ruby_version}-linux-musl-#{arch}.tar.gz"
+    package_full = "traveling-pact-#{VERSION}-#{ruby_version}-linux-musl-#{arch}-full.tar.gz"
+    gem_dir = "traveling-pact-gems-#{VERSION}-#{ruby_version}-linux-musl-#{arch}"
 
     task :package => "package:#{ruby_version}:#{arch}"
     task :package_full => "package_full:#{ruby_version}:#{arch}"
