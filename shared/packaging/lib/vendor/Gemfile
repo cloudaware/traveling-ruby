@@ -1,17 +1,9 @@
 source 'https://rubygems.org'
 
-
-# gem 'ffi'
 gem 'pg'
 gem 'puma'
 gem "sqlite3"
 gem 'nokogiri'
-gem 'pact'
-gem 'pact-support'
-gem 'pact-mock_service'
-gem 'pact-provider-verifier'
-gem 'pact_broker-client'
 gem 'pact_broker'
-gem 'pact-message'
-# gem 'pact-ffi'
 gem 'mysql2'
+gem 'json', '2.6.3'
