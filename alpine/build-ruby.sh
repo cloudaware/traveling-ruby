@@ -152,7 +152,7 @@ fi
 exec docker run \
 	"${TTY_ARGS[@]}" \
 	--rm \
-	--init \
+	-it \
 	--platform linux/"$ARCHITECTURE" \
 	-v "$SELFDIR/internal:/system:ro" \
 	-v "$SELFDIR/../shared:/system_shared:ro" \

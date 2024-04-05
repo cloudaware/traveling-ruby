@@ -92,7 +92,7 @@ echo
 source /hbb_shlib/activate
 
 # Required for OpenSSL as it is stored in /hbb_shlib/lib64
-if [ "$(uname -m)" = "x86_64" ]; then
+if [ "$(uname -m)" = "x86_64" ] || [ "$(uname -m)" = "ppc64le" ]; then
 	export LDFLAGS="$LDFLAGS -L/hbb_shlib/lib64"
 	export SHLIB_LDFLAGS="$SHLIB_LDFLAGS -L/hbb_shlib/lib64"
 	export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/hbb_shlib/lib64/pkgconfig"
@@ -382,6 +382,6 @@ find /output -name '*.so*'
 
 if $SANITY_CHECK_OUTPUT; then
 	header "Sanity checking build output"
-	env LIBCHECK_ALLOW='libreadline|libtinfo|libformw|libmenuw|libncursesw|libc.musl-aarch64|libc.musl-x86_64' \
+	env LIBCHECK_ALLOW='libreadline|libtinfo|libformw|libmenuw|libncursesw|libc.musl-aarch64|libc.musl-x86_64|libc.musl-x86|libc.musl-s390x' \
 		libcheck /output/bin.real/ruby $(find /output -name '*.so')
 fi
