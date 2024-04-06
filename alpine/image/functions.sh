@@ -25,6 +25,7 @@ function download_and_extract()
 	local DIRNAME="$2"
 	local URL="$3"
 	local regex='\.bz2$'
+	local zipregex='\.zip$'
 
 	if [[ ! -e "/tmp/$BASENAME" ]]; then
 		run rm -f "/tmp/$BASENAME.tmp"
@@ -33,6 +34,8 @@ function download_and_extract()
 	fi
 	if [[ "$URL" =~ $regex ]]; then
 		run tar xjf "/tmp/$BASENAME"
+	elif [[ "$URL" =~ $zipregex ]]; then
+		run unzip "/tmp/$BASENAME" -d /$DIRNAME
 	else
 		run tar xzf "/tmp/$BASENAME"
 	fi

@@ -11,7 +11,7 @@ if [ -z "$1" ]; then
     echo "image is optional|default: node:20-slim"
     exit 1
 fi
-IMAGE=${2:-"node:20-slim"}
+IMAGE=${2:-"debian:9-slim"}
 if ! command -v docker &> /dev/null
 then
         echo "Error: docker could not be found"

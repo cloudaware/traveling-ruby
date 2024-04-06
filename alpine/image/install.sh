@@ -28,19 +28,19 @@ SKIP_CLEANUP=${SKIP_CLEANUP:-true}
 
 ### Install base software
 
-echo "$ARCHITECTURE" >/ARCHITECTURE
 if [[ $SKIP_INITIALIZE != true ]]; then
+	echo "$ARCHITECTURE" >/ARCHITECTURE
 	run apk add --no-cache wget sudo readline-dev ncurses-dev curl
+	run mkdir -p /ccache
 fi
-# run yum install -y wget sudo readline-devel ncurses-devel s3cmd libyaml-devel libffi-devel
-run mkdir -p /ccache
-# run create_user app "App" 1000
-# run pip install awscli==1.19.2
 
 ### MySQL
 
 header "Installing MySQL"
 if [[ $SKIP_MYSQL != true ]]; then
+	# install_openssl shlib
+	# run mv /hbb_shlib/bin/openssl /hbb/bin/
+	# run rm -f "/hbb_shlib/bin/openssl"
 	if [[ ! -e /hbb_shlib/lib/libmysqlclient.a ]]; then
 		download_and_extract mysql-connector-c-$MYSQL_LIB_VERSION-src.tar.gz \
 			mysql-connector-c-$MYSQL_LIB_VERSION-src \

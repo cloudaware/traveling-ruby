@@ -153,7 +153,7 @@ exec docker run \
 	"${TTY_ARGS[@]}" \
 	--rm \
 	--init \
-	--platform linux/"$ARCHITECTURE" \
+	--platform linux/"${ARCHITECTURE//-//}" \
 	-v "$SELFDIR/internal:/system:ro" \
 	-v "$SELFDIR/../shared:/system_shared:ro" \
 	-v "$OUTPUT_DIR:/output" \

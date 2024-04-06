@@ -1,10 +1,11 @@
-IMAGE_VERSION = "next-alpine"
+IMAGE_VERSION = "alpine"
 
 VERSION       = File.read("../VERSION.txt").strip
 RUBY_VERSIONS = ENV['RUBY_VERSIONS'] ? [].push(ENV['RUBY_VERSIONS']) : File.read("../RUBY_VERSIONS.txt").strip.split(/\s+/)
-ARCHITECTURES = ENV['ARCHITECTURES'] ? [].push(ENV['ARCHITECTURES']) : ["x86_64","arm64","ppc64le", "arm/v6", "arm/v7","s390x", "i386"]
+ARCHITECTURES = ENV['ARCHITECTURES'] ? [].push(ENV['ARCHITECTURES']) : ["x86_64","arm64","ppc64le", "arm-v6", "arm-v7","s390x", "386"]
+
 # CONCURRENCY   = `./internal/cpucount.sh`.to_i
-CONCURRENCY   = 12
+CONCURRENCY   = 8
 
 if RUBY_VERSIONS.any? { |version| Gem::Version.new(version) < Gem::Version.new('3.1.0') }
   ENV['OPENSSL_1_1_LEGACY'] = 'true'
@@ -51,6 +52,8 @@ task :clean do
 end
 
 ARCHITECTURES.each do |arch|
+  DOCKER_PLATFORM = "#{arch.gsub(/-/, '/')}"
+  ENV['DOCKER_PLATFORM'] = DOCKER_PLATFORM
   # if RUBY_VERSIONS.any? { |version| Gem::Version.new(version) < Gem::Version.new('3.1.0') }
   #   ENV['OPENSSL_1_1_LEGACY'] = 'true'
   #   puts "OpenSSL 1.1.1 legacy mode enabled"
@@ -62,8 +65,8 @@ ARCHITECTURES.each do |arch|
     IMAGE_FILE = "image/Dockerfile"
     IMAGE_FILE += "-openssl1.1.1" if ENV['OPENSSL_1_1_LEGACY']
     puts "Building Docker image for #{arch} from #{IMAGE_FILE}"
-    sh "docker build --platform linux/#{arch}" \
-      " -t you54f/traveling-ruby-builder-#{arch}:#{IMAGE_VERSION}" \
+    sh "docker build --platform linux/#{DOCKER_PLATFORM}" \
+      " -t you54f/traveling-ruby-builder:#{IMAGE_VERSION}" \
       " -f #{IMAGE_FILE} image"
   end
 
@@ -85,6 +88,9 @@ ARCHITECTURES.each do |arch|
     package = "traveling-ruby-#{VERSION}-#{ruby_version}-linux-musl-#{arch}.tar.gz"
     package_full = "traveling-ruby-#{VERSION}-#{ruby_version}-linux-musl-#{arch}-full.tar.gz"
     gem_dir = "traveling-ruby-gems-#{VERSION}-#{ruby_version}-linux-musl-#{arch}"
+    # package = "traveling-pact-#{VERSION}-#{ruby_version}-linux-musl-#{arch}.tar.gz"
+    # package_full = "traveling-pact-#{VERSION}-#{ruby_version}-linux-musl-#{arch}-full.tar.gz"
+    # gem_dir = "traveling-pact-gems-#{VERSION}-#{ruby_version}-linux-musl-#{arch}"
 
     task :package => "package:#{ruby_version}:#{arch}"
     task :package_full => "package_full:#{ruby_version}:#{arch}"
@@ -118,8 +124,8 @@ ARCHITECTURES.each do |arch|
     # We use 'file' instead of 'directory' here so that packages are updated
     # whenever we update binaries.
     file("output/#{ruby_version}-#{arch}/bin" => "cache/#{ruby_version}-#{arch}") do
-      # sh "mkdir output\\#{ruby_version}-#{arch}"
-      sh "./build-ruby.sh -a #{arch} -j #{CONCURRENCY} -i you54f/traveling-ruby-builder-#{arch}:#{IMAGE_VERSION}" \
+      sh "mkdir -p output/#{ruby_version}-#{arch}"
+      sh "./build-ruby.sh -a #{arch} -j #{CONCURRENCY} -i you54f/traveling-ruby-builder:#{IMAGE_VERSION}" \
         " -r #{ruby_version} -c cache/#{ruby_version}-#{arch}" \
         " output/#{ruby_version}-#{arch}"
     end

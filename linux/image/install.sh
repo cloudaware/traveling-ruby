@@ -11,19 +11,40 @@ LIBSSH2_VERSION=1.11.0
 LIBFFI_VERSION=3.4.4
 LIBYAML_VERSION=0.2.5
 MAKE_CONCURRENCY=10
-ARCHITECTURE_BITS=64
+MAKE_CONCURRENCY=10
+if [[ $ARCHITECTURE == "armv7l" ]]; then
+	ARCHITECTURE_BITS=32
+else
+	ARCHITECTURE_BITS=64
+fi
+echo $ARCHITECTURE_BITS
+SKIP_INITIALIZE=${SKIP_INITIALIZE:-true}
+SKIP_MYSQL=${SKIP_MYSQL:-true}
+SKIP_POSTGRESQL=${SKIP_POSTGRESQL:-true}
+SKIP_ICU=${SKIP_ICU:-true}
+SKIP_LIBSSH2=${SKIP_LIBSSH2:-true}
+SKIP_LIBYAML=${SKIP_LIBYAML:-true}
+SKIP_LIBFFI=${SKIP_LIBFFI:-true}
+SKIP_CLEANUP=${SKIP_CLEANUP:-true}
+
 
 ### Install base software
+if [[ $SKIP_INITIALIZE != true ]]; then
 
-echo "$ARCHITECTURE" >/ARCHITECTURE
-run yum install -y wget sudo readline-devel ncurses-devel s3cmd
-# run yum install -y wget sudo readline-devel ncurses-devel s3cmd libyaml-devel libffi-devel
-run mkdir -p /ccache
-run create_user app "App" 1000
+	echo "$ARCHITECTURE" >/ARCHITECTURE
+	if [[ -f "/etc/debian_version" ]]; then
+		run apt-get -y install libreadline-dev libncurses5-dev libncursesw5-dev
+	elif [[ -f "/etc/centos-release" ]]; then
+		run yum install -y wget sudo readline-devel ncurses-devel s3cmd
+		run create_user app "App" 1000
+	fi
+	# run yum install -y wget sudo readline-devel ncurses-devel s3cmd libyaml-devel libffi-devel
+	run mkdir -p /ccache
+fi
 # run pip install awscli==1.19.2
 
 ### MySQL
-
+if [[ $SKIP_MYSQL != true ]]; then
 header "Installing MySQL"
 if [[ ! -e /hbb_shlib/lib/libmysqlclient.a ]]; then
 	download_and_extract mysql-connector-c-$MYSQL_LIB_VERSION-src.tar.gz \
@@ -52,9 +73,9 @@ if [[ ! -e /hbb_shlib/lib/libmysqlclient.a ]]; then
 	popd >/dev/null
 	run rm -rf mysql-connector-c-$MYSQL_LIB_VERSION-src
 fi
-
+fi
 ### PostgreSQL
-
+if [[ $SKIP_POSTGRESQL != true ]]; then
 header "Installing PostgreSQL"
 if [[ ! -e /hbb_shlib/lib/libpq.a ]]; then
 	download_and_extract postgresql-$POSTGRESQL_VERSION.tar.bz2 \
@@ -93,9 +114,9 @@ if [[ ! -e /hbb_shlib/lib/libpq.a ]]; then
 	popd >/dev/null
 	run rm -rf postgresql-$POSTGRESQL_VERSION
 fi
-
+fi
 ### ICU
-
+if [[ $SKIP_ICU != true ]]; then
 header "Installing ICU"
 if [[ ! -e /hbb_shlib/lib/libicudata.a ]]; then
 	download_and_extract icu4c-$ICU_FILE_VERSION-src.tgz \
@@ -119,136 +140,143 @@ if [[ ! -e /hbb_shlib/lib/libicudata.a ]]; then
 	popd >/dev/null
 	run rm -rf icu
 fi
-
+fi
 ### libssh2
+if [[ $SKIP_LIBSSH2 != true ]]; then
+	header "Installing libssh2"
+	if [[ ! -e /hbb_shlib/lib/libssh2.a ]]; then
+		download_and_extract libssh2-$LIBSSH2_VERSION.tar.gz \
+			libssh2-$LIBSSH2_VERSION \
+			http://www.libssh2.org/download/libssh2-$LIBSSH2_VERSION.tar.gz
 
-header "Installing libssh2"
-if [[ ! -e /hbb_shlib/lib/libssh2.a ]]; then
-	download_and_extract libssh2-$LIBSSH2_VERSION.tar.gz \
-		libssh2-$LIBSSH2_VERSION \
-		http://www.libssh2.org/download/libssh2-$LIBSSH2_VERSION.tar.gz
+		(
+			source /hbb_shlib/activate
+			export CFLAGS="$STATICLIB_CFLAGS"
+			export CXXFLAGS="$STATICLIB_CXXFLAGS"
+			unset LDFLAGS
+			run ./configure --prefix=/hbb_shlib --enable-static --disable-shared \
+				--with-openssl --with-libz --disable-examples-build --disable-debug
+			run make -j$CONCURRENCY
+			run make install-strip -j$CONCURRENCY
+		)
+		if [[ "$?" != 0 ]]; then false; fi
 
-	(
-		source /hbb_shlib/activate
-		export CFLAGS="$STATICLIB_CFLAGS"
-		export CXXFLAGS="$STATICLIB_CXXFLAGS"
-		unset LDFLAGS
-		run ./configure --prefix=/hbb_shlib --enable-static --disable-shared \
-			--with-openssl --with-libz --disable-examples-build --disable-debug
-		run make -j$CONCURRENCY
-		run make install-strip -j$CONCURRENCY
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-
-	echo "Leaving source directory"
-	popd >/dev/null
-	run rm -rf libssh2-$LIBSSH2_VERSION
+		echo "Leaving source directory"
+		popd >/dev/null
+		run rm -rf libssh2-$LIBSSH2_VERSION
+	fi
 fi
-
 ### libyaml
+if [[ $SKIP_LIBYAML != true ]]; then
+	header "Installing libyaml"
+	if [[ ! -e /hbb_shlib/lib/libyaml.a ]]; then
+		download_and_extract yaml-$LIBYAML_VERSION.tar.gz \
+			yaml-$LIBYAML_VERSION \
+			https://github.com/yaml/libyaml/releases/download/$LIBYAML_VERSION/yaml-$LIBYAML_VERSION.tar.gz
 
-header "Installing libyaml"
-if [[ ! -e /hbb_shlib/lib/libyaml.a ]]; then
-	download_and_extract yaml-$LIBYAML_VERSION.tar.gz \
-		yaml-$LIBYAML_VERSION \
-		https://github.com/yaml/libyaml/releases/download/$LIBYAML_VERSION/yaml-$LIBYAML_VERSION.tar.gz
+		(
+			source /hbb_shlib/activate
+			export CFLAGS="$STATICLIB_CFLAGS"
+			export CXXFLAGS="$STATICLIB_CXXFLAGS"
+			unset LDFLAGS
+			header "libyaml - configure"
+			run ./configure --prefix=/hbb_shlib --enable-static --disable-shared
+			header "libyaml - make"
+			find -name libyaml*
+			run make -j$CONCURRENCY
+			header "libyaml - post make"
+			find -name libyaml*
+			run ls
+			header "libyaml - install-strip"
+			find -name libyaml*
+			run make install-strip -j$CONCURRENCY
+			header "libyaml - post install-strip"
+			find -name libyaml*
+			run ls /hbb_shlib/lib/
+			header "libyaml - strip --strip-debug"
+			find -name libyaml*
+			run strip --strip-debug /hbb_shlib/lib/libyaml.a
+			header "libyaml - post strip --strip-debug /hbb_shlib/lib/libyaml.a"
+			find -name libyaml*
+			run ls /hbb_shlib/lib/
+		)
+		if [[ "$?" != 0 ]]; then false; fi
 
-	(
-		source /hbb_shlib/activate
-		export CFLAGS="$STATICLIB_CFLAGS"
-		export CXXFLAGS="$STATICLIB_CXXFLAGS"
-		unset LDFLAGS
-		header "libyaml - configure"
-		run ./configure --prefix=/hbb_shlib --enable-static --disable-shared
-		header "libyaml - make"
-		find -name libyaml*
-		run make -j$CONCURRENCY
-		header "libyaml - post make"
-		find -name libyaml*
-		run ls
-		header "libyaml - install-strip"
-		find -name libyaml*
-		run make install-strip -j$CONCURRENCY
-		header "libyaml - post install-strip"
-		find -name libyaml*
-		run ls /hbb_shlib/lib/
-		header "libyaml - strip --strip-debug"
-		find -name libyaml*
-		run strip --strip-debug /hbb_shlib/lib/libyaml.a
-		header "libyaml - post strip --strip-debug /hbb_shlib/lib/libyaml.a"
-		find -name libyaml*
-		run ls /hbb_shlib/lib/
-	)
-	if [[ "$?" != 0 ]]; then false; fi
+		echo "Leaving source directory"
+		popd >/dev/null
+		run rm -rf yaml-$LIBYAML_VERSION
 
-	echo "Leaving source directory"
-	popd >/dev/null
-	run rm -rf yaml-$LIBYAML_VERSION
-
-else
-	echo "yaml-$LIBYAML_VERSION Already installed."
+	else
+		echo "yaml-$LIBYAML_VERSION Already installed."
+	fi
 fi
-
 # ### libffi
 
-# header "Installing libffi"
+if [[ $SKIP_LIBFFI != true ]]; then
+header "Installing libffi"
+	if [[ ! -e /hbb_shlib/lib64/libffi.a ]]; then
+		download_and_extract yaml-$LIBFFI_VERSION.tar.gz \
+			libffi-$LIBFFI_VERSION \
+			https://github.com/libffi/libffi/releases/download/v$LIBFFI_VERSION/libffi-$LIBFFI_VERSION.tar.gz
 
-if [[ ! -e /hbb_shlib/lib64/libffi.a ]]; then
-	download_and_extract yaml-$LIBFFI_VERSION.tar.gz \
-		libffi-$LIBFFI_VERSION \
-		https://github.com/libffi/libffi/releases/download/v$LIBFFI_VERSION/libffi-$LIBFFI_VERSION.tar.gz
+		(
+			source /hbb_shlib/activate
+			export CFLAGS="$STATICLIB_CFLAGS"
+			export CXXFLAGS="$STATICLIB_CXXFLAGS"
 
-	(
-		source /hbb_shlib/activate
-		export CFLAGS="$STATICLIB_CFLAGS"
-		export CXXFLAGS="$STATICLIB_CXXFLAGS"
-
-		unset LDFLAGS
-		header "libffi - configure"
-		## This works for libffi, but fiddle has an error
-		# run ./configure --prefix=/hbb_shlib  --enable-static --enable-portable-binary --enable-shared
-
-
-		## trying out for fiddle
-		run ./configure --prefix=/hbb_shlib -disable-shared --enable-static \
-			--with-pic=yes --disable-dependency-tracking --disable-docs
+			unset LDFLAGS
+			header "libffi - configure"
+			## This works for libffi, but fiddle has an error
+			# run ./configure --prefix=/hbb_shlib  --enable-static --enable-portable-binary --enable-shared
 
 
+			## trying out for fiddle
+			run ./configure --prefix=/hbb_shlib -disable-shared --enable-static \
+				--with-pic=yes --disable-dependency-tracking --disable-docs
 
-		header "libffi - make"
-		run make -j$CONCURRENCY
-		run ls
-		header "libffi - install-strip"
-		run make install-strip -j$CONCURRENCY
-		header "libffi - ls /hbb_shlib/lib and /hbb_shlib/lib64"
-		run ls /hbb_shlib/lib/
-		run ls /hbb_shlib/lib64/
-		header "libffi - strip --strip-debug"
-		# run ar -qs /hbb_shlib/lib/libpq.a ./*.o
-		# run strip --strip-debug /hbb_shlib/lib64/libffi.a
-		# run strip --strip-debug /hbb_shlib/lib64/libffi.so
-		# run strip --strip-debug /hbb_shlib/lib64/libffi.so.8
-		# run strip --strip-debug /hbb_shlib/lib64/libffi.so.8.1.0
-		header "libffi - ls /hbb_shlib/lib and /hbb_shlib/lib64"
-		run ls /hbb_shlib/lib/
-		run ls /hbb_shlib/lib64/
-	)
-	if [[ "$?" != 0 ]]; then false; fi
 
-	echo "Leaving source directory"
-	popd >/dev/null
-	# run rm -rf libffi-$LIBFFI_VERSION
 
-else
-	echo "libffi-$LIBFFI_VERSION Already installed."
+			header "libffi - make"
+			run make -j$CONCURRENCY
+			run ls
+			header "libffi - install-strip"
+			run make install-strip -j$CONCURRENCY
+			header "libffi - ls /hbb_shlib/lib and /hbb_shlib/lib64"
+			run ls /hbb_shlib/lib/
+			# run ls /hbb_shlib/lib64/
+			header "libffi - strip --strip-debug"
+			# run ar -qs /hbb_shlib/lib/libpq.a ./*.o
+			# run strip --strip-debug /hbb_shlib/lib64/libffi.a
+			# run strip --strip-debug /hbb_shlib/lib64/libffi.so
+			# run strip --strip-debug /hbb_shlib/lib64/libffi.so.8
+			# run strip --strip-debug /hbb_shlib/lib64/libffi.so.8.1.0
+			header "libffi - ls /hbb_shlib/lib and /hbb_shlib/lib64"
+			run ls /hbb_shlib/lib/
+			# run ls /hbb_shlib/lib64/
+		)
+		if [[ "$?" != 0 ]]; then false; fi
+
+		echo "Leaving source directory"
+		popd >/dev/null
+		# run rm -rf libffi-$LIBFFI_VERSION
+
+	else
+		echo "libffi-$LIBFFI_VERSION Already installed."
+	fi
 fi
-
 run ls /hbb_shlib/lib/
-run ls /hbb_shlib/lib64
+run ls /hbb_shlib/lib64 || echo true
+run ls /lib/*
+run ls /usr/lib/*
 
 # echo
 
 ### Cleanup
-
-rm -rf /tr_build /tmp/*
-yum clean all
+if [[ $SKIP_CLEANUP != true ]]; then
+	rm -rf /tr_build /tmp/*
+	if [[ -f "/etc/debian_version" ]]; then
+		echo "Debian"
+	elif [[ -f "/etc/centos-release" ]]; then
+		yum clean all
+	fi
+fi

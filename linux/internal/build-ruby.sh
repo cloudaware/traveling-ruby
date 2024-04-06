@@ -147,12 +147,15 @@ fi
 
 if $COMPILE; then
 	header "Compiling"
-	if [[ $RUBY_MAJOR -lt 3 || $RUBY_MAJOR -eq 3 && $RUBY_MINOR -lt 3 ]]; then
-		run sed -i 's|dir_config("openssl")|$libs << " -lz "; dir_config("openssl")|' ext/openssl/extconf.rb
-	else
-	# https://github.com/ruby/ruby/commit/8dd5c20224771abacfcfba848d9465131f14f3fe
-		run sed -i 's|ssl_dirs.any?|$libs << " -lz "; dir_config("openssl").any?|' ext/openssl/extconf.rb
+	if [[ -f "/etc/centos-release" ]]; then
+		if [[ $RUBY_MAJOR -lt 3 || $RUBY_MAJOR -eq 3 && $RUBY_MINOR -lt 3 ]]; then
+			run sed -i 's|dir_config("openssl")|$libs << " -lz "; dir_config("openssl")|' ext/openssl/extconf.rb
+		else
+		# https://github.com/ruby/ruby/commit/8dd5c20224771abacfcfba848d9465131f14f3fe
+			run sed -i 's|ssl_dirs.any?|$libs << " -lz "; dir_config("openssl").any?|' ext/openssl/extconf.rb
+		fi
 	fi
+
 	# Do not link to ncurses. We want it to link to libtermcap instead, which is much smaller.
 	if [[ $RUBY_MAJOR -lt 3 || $RUBY_MAJOR -eq 3 && $RUBY_MINOR -lt 3 ]]; then
 		echo overwriting ext/readline/extconf.rb as a workaround for https://bugs.ruby-lang.org/issues/17123
@@ -175,23 +178,46 @@ echo
 header "Postprocessing build output"
 
 # Copy over non-statically linked third-party libraries and other files.
-if [[ "$NAME" = x86 ]]; then
-	USRLIBDIR=/usr/lib
+
+# process for additional arches
+if [[ -f "/etc/debian_version" ]]; then
+	if [ "$(uname -m)" = "aarch64" ]; then
+		USRLIBDIR=/usr/lib/aarch64-linux-gnu
+		LIBDIR=/lib/aarch64-linux-gnu
+	elif [ "$(uname -m)" = "x86" ]; then
+		USRLIBDIR=/usr/lib
+	else
+		USRLIBDIR=/usr/lib64
+	fi
 else
-	USRLIBDIR=/usr/lib64
+	if [[ "$NAME" = x86 ]]; then
+		USRLIBDIR=/usr/lib
+	else
+		USRLIBDIR=/usr/lib64
+	fi
 fi
+
 header "finding libs"
 find -name libyam*  
 find -name psy*
 find -name libffi*
 find -name libz*
+header "checking lib dir"
+run ls $LIBDIR
 header "checking usr lib dir"
 run ls $USRLIBDIR
 run ls /usr/lib
 run ls /hbb_shlib/lib
-run cp $USRLIBDIR/libtinfo.so.5 /tmp/ruby/lib/
-if [[ $RUBY_MAJOR -lt 3 || $RUBY_MAJOR -eq 3 && $RUBY_MINOR -lt 3 ]]; then
-	run cp $USRLIBDIR/libreadline.so.6 /tmp/ruby/lib/
+if [[ -f "/etc/debian_version" ]]; then
+	run cp $LIBDIR/libtinfo.so.5 /tmp/ruby/lib/
+	if [[ $RUBY_MAJOR -lt 3 || $RUBY_MAJOR -eq 3 && $RUBY_MINOR -lt 3 ]]; then
+		run cp $LIBDIR/libreadline.so.6 /tmp/ruby/lib/
+	fi
+else
+	run cp $USRLIBDIR/libtinfo.so.5 /tmp/ruby/lib/
+	if [[ $RUBY_MAJOR -lt 3 || $RUBY_MAJOR -eq 3 && $RUBY_MINOR -lt 3 ]]; then
+		run cp $USRLIBDIR/libreadline.so.6 /tmp/ruby/lib/
+	fi
 fi
 
 run cp /system_shared/ca-bundle.crt /tmp/ruby/lib/
@@ -213,15 +239,19 @@ echo $GEM_EXTENSION_API_VERSION > /tmp/ruby/info/GEM_EXTENSION_API_VERSION
 # Install gem-specific library dependencies.
 run mkdir -p /tmp/ruby/lib/ruby/gems/$RUBY_COMPAT_VERSION/deplibs/$GEM_PLATFORM
 pushd /tmp/ruby/lib/ruby/gems/$RUBY_COMPAT_VERSION/deplibs/$GEM_PLATFORM
-run mkdir curses && run cp $USRLIBDIR/{libncursesw.so.5,libmenuw.so.5,libformw.so.5} curses/
 
 
 
-## If installing libffi from source
-# run cp /hbb_shlib/lib64/{libffi.so.8,libffi.so.8.1.2} /tmp/ruby/lib/
+if [[ -f "/etc/debian_version" ]]; then
+	run mkdir curses && run cp $LIBDIR/libncursesw.so.5 curses/
+	run cp $USRLIBDIR/{libmenuw.so.5,libformw.so.5} curses/
+	run cp $USRLIBDIR/{libffi.so.6,libffi.so.6.0.1} /tmp/ruby/lib/
+	run cp $USRLIBDIR/{libgmp.so,libgmp.so.10} /tmp/ruby/lib/
+else
+	run mkdir curses && run cp $USRLIBDIR/{libncursesw.so.5,libmenuw.so.5,libformw.so.5} curses/
+	run cp $USRLIBDIR/{libffi.so.6,libffi.so.6.0.1} /tmp/ruby/lib/
+fi
 
-# ## If using libffi included in the holy build box system
-run cp $USRLIBDIR/{libffi.so.6,libffi.so.6.0.1} /tmp/ruby/lib/
 popd
 
 echo "Patching rbconfig.rb"
@@ -385,6 +415,8 @@ find /output -name '*.so*'
 
 if $SANITY_CHECK_OUTPUT; then
 	header "Sanity checking build output"
-	env LIBCHECK_ALLOW='libreadline|libtinfo|libformw|libmenuw|libncursesw' \
+	env LIBCHECK_ALLOW='libreadline|libtinfo|libformw|libmenuw|libncursesw|libgmp' \
 		libcheck /output/bin.real/ruby $(find /output -name '*.so')
 fi
+
+	# env LIBCHECK_ALLOW='libreadline|libtinfo|libformw|libmenuw|libncursesw|libc.musl-aarch64|libc.musl-x86_64|libc.musl-x86|libc.musl-s390x|libc.musl-ppc64le' \

@@ -49,3 +49,51 @@ We delete the version numbers, other than the version of ruby we are packaging, 
 should we create a full fat bundler, that has all the gem extensions pre-installed?
 
 - Now created as `-full` packages (Linux/MacOS only)
+
+## Traveling Ruby Supported Platforms
+
+### Linux
+
+| Platform                 | Architecture  | Musl | Glibc
+|--------------------------|---------------|------|-------
+| ARMv8 64-bit (`arm64v8`) | ARMv8         |  ✅  | ✅
+| Linux x86-64 (`amd64`)   | x86-64        |  ✅  | 🚧
+| x86/i686 (`i386`)        | x86/i686      |  ✅  | 🚧
+| IBM z Systems (`s390x`)  | z Systems     |  ✅  | 🚧
+| IBM POWER8 (`ppc64le`)   | POWER8        |  ✅  | 🚧
+
+- Alpine images built against 3.15
+- Ubuntu images built against 14.04 (glibc 2.19)
+- Centos based packages built against Centos7 (glibc 2.17)
+
+## MacOS
+
+| Platform                 | Architecture  | Supported
+|--------------------------|---------------|------
+| MacOS x86-64 (`darwin-x86_64`) | x86-64 |  ✅  
+| MacOS arm64 (`darwin-arm64`)   | arm64     |  ✅
+
+- macos x86_64 binaries - 10.15 Catalina onwards
+- macos arm64 binaries - 11.0 Big Sur onwards
+
+## Windows
+
+| Platform                 | Architecture  | Supported
+|--------------------------|---------------|------
+| Windows x86-64 (`windows-x86_64`) | x86-64 |  ✅  
+| Windows x86 (`windows-x86`)   | x86     |  ✅
+| Windows arm64 (`windows-arm64`)   | arm64     |  🚧
+
+- windows-arm64, ruby 3.1.4 only
+
+- 🚧 Native extensions not currently supported
+  - Use ocran or aibika (forks of ocran) to build native extensions
+- Docker Support
+  - Nanoserver images, will work if libgmp from package is copied to C:\Windows\System32
+- Wine support
+  - x86_64 package fails on darwin-arm64 with unexpected ucrtbase.dll error
+    - Workaround, use x86 package on darwin-arm64
+- Windows VM support
+  - x86_64 package fails when emulated in vm's on darwin-arm64 with unexpected ucrtbase.dll error
+    - Workaround, use x86 package on darwin-arm64
+    - Workaround, use arm64 package on darwin-arm64
