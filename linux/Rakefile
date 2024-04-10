@@ -65,8 +65,8 @@ ARCHITECTURES.each do |arch|
     IMAGE_FILE = "image/Dockerfile"
     IMAGE_FILE += "-openssl1.1.1" if ENV['OPENSSL_1_1_LEGACY']
     puts "Building Docker image for #{arch} from #{IMAGE_FILE}"
-    sh "docker build --platform linux/#{DOCKER_PLATFORM}" \
-    " -t you54f/traveling-ruby-builder:#{IMAGE_VERSION}" \
+    sh "docker build --progress=plain --platform linux/#{DOCKER_PLATFORM}" \
+    " -t you54f/traveling-ruby-builder:#{IMAGE_VERSION}-#{DOCKER_PLATFORM}" \
     " -f #{IMAGE_FILE} image"
   end
 
@@ -124,8 +124,8 @@ ARCHITECTURES.each do |arch|
     # We use 'file' instead of 'directory' here so that packages are updated
     # whenever we update binaries.
     file("output/#{ruby_version}-#{arch}/bin" => "cache/#{ruby_version}-#{arch}") do
-      sh "mkdir -p output/#{ruby_version}-#{arch}"
-      sh "./build-ruby.sh -a #{arch} -j #{CONCURRENCY} -i you54f/traveling-ruby-builder:#{IMAGE_VERSION}" \
+      # sh "mkdir -p output/#{ruby_version}-#{arch}"
+      sh "./build-ruby.sh -a #{arch} -j #{CONCURRENCY} -i you54f/traveling-ruby-builder:#{IMAGE_VERSION}-#{DOCKER_PLATFORM}" \
           " -r #{ruby_version} -c cache/#{ruby_version}-#{arch}" \
           " output/#{ruby_version}-#{arch}"
     end

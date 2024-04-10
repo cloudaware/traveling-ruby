@@ -29,7 +29,25 @@ if [[ $SKIP_ICU != true ]]; then
 			export CFLAGS="$STATICLIB_CFLAGS -DU_CHARSET_IS_UTF8=1 -DU_USING_ICU_NAMESPACE=0"
 			export CXXFLAGS="$STATICLIB_CXXFLAGS -DU_CHARSET_IS_UTF8=1 -DU_USING_ICU_NAMESPACE=0"
 			unset LDFLAGS
-			run ./configure --prefix=/hbb_shlib --disable-samples --disable-tests \
+			if [ "$(uname -m)" = "x86_64" ]; then
+				echo "detected processor"
+				if grep -q "alpine" /etc/os-release; then
+					echo "detected alpine"
+					if file /bin/busybox | grep 32 >/dev/null; then
+					echo "32 bit target"
+						CONFIGURE_TARGET="i586-alpine-linux-musl --with-library-bits 32 --enable-64bit-libs false "
+					fi
+				elif grep -q "ubuntu" /etc/os-release; then
+					echo "detected ubuntu"
+					if file /bin/dash | grep 32 >/dev/null; then
+					echo "32 bit target"
+						CONFIGURE_TARGET="i386-linux-gnu --with-library-bits 32 --enable-64bit-libs false "
+					fi
+				fi
+			elif [ "$(uname -m)" = "i686" ]; then
+				CONFIGURE_TARGET="i386-linux-gnu --with-library-bits 32 --enable-64bit-libs false "
+			fi
+			run ./configure $CONFIGURE_TARGET--prefix=/hbb_shlib --disable-samples --disable-tests \
 				--enable-static --disable-shared --with-library-bits=$ARCHITECTURE_BITS
 			run make -j$MAKE_CONCURRENCY VERBOSE=1
 			run make install -j$MAKE_CONCURRENCY

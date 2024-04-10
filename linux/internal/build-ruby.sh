@@ -124,6 +124,15 @@ if [[ ! -e /ruby-$RUBY_VERSION.tar.gz ]]; then
 	echo
 fi
 
+# this allows us to ensure we pick the correct gcc compiler
+if [ "$(uname -m)" = "x86_64" ]; then
+	if file /bin/dash | grep 32 >/dev/null; then
+		RUBY_CFG_OPTS="--host i686-pc-linux-gnu --build i686-pc-linux-gnu"
+	fi
+elif [ "$(uname -m)" = "riscv64" ]; then
+	RUBY_CFG_OPTS="--host riscv64-linux-gnu --build riscv64-linux-gnu"
+fi
+
 if $SETUP_SOURCE; then
 	header "Extracting source code"
 	run rm -rf /tmp/ruby-$RUBY_VERSION
@@ -136,7 +145,7 @@ if $SETUP_SOURCE; then
 	run ./configure \
 		--prefix /tmp/ruby \
 		--disable-install-doc \
-		--with-out-ext=tk,sdbm,gdbm,dbm,dl,coverage
+		--with-out-ext=tk,sdbm,gdbm,dbm,dl,coverage $RUBY_CFG_OPTS
 	echo
 else
 	echo "Entering ruby-$RUBY_VERSION"
@@ -184,6 +193,26 @@ if [[ -f "/etc/debian_version" ]]; then
 	if [ "$(uname -m)" = "aarch64" ]; then
 		USRLIBDIR=/usr/lib/aarch64-linux-gnu
 		LIBDIR=/lib/aarch64-linux-gnu
+	elif [ "$(uname -m)" = "x86_64" ]; then
+		if file /bin/dash | grep 32 >/dev/null; then
+			USRLIBDIR=/usr/lib/i386-linux-gnu
+			LIBDIR=/lib/i386-linux-gnu
+		else
+			USRLIBDIR=/usr/lib/x86_64-linux-gnu
+			LIBDIR=/lib/x86_64-linux-gnu
+		fi
+	elif [ "$(uname -m)" = "i686" ]; then
+		USRLIBDIR=/usr/lib/i386-linux-gnu
+		LIBDIR=/lib/i386-linux-gnu
+	elif [ "$(uname -m)" = "ppc64le" ]; then
+		USRLIBDIR=/usr/lib/powerpc64le-linux-gnu
+		LIBDIR=/lib/powerpc64le-linux-gnu
+	elif [ "$(uname -m)" = "s390x" ]; then
+		USRLIBDIR=/usr/lib/s390x-linux-gnu
+		LIBDIR=/lib/s390x-linux-gnu
+	elif [ "$(uname -m)" = "riscv64" ]; then
+		USRLIBDIR=/usr/lib/riscv64-linux-gnu
+		LIBDIR=/lib/riscv64-linux-gnu
 	elif [ "$(uname -m)" = "x86" ]; then
 		USRLIBDIR=/usr/lib
 	else
@@ -209,9 +238,16 @@ run ls $USRLIBDIR
 run ls /usr/lib
 run ls /hbb_shlib/lib
 if [[ -f "/etc/debian_version" ]]; then
-	run cp $LIBDIR/libtinfo.so.5 /tmp/ruby/lib/
-	if [[ $RUBY_MAJOR -lt 3 || $RUBY_MAJOR -eq 3 && $RUBY_MINOR -lt 3 ]]; then
-		run cp $LIBDIR/libreadline.so.6 /tmp/ruby/lib/
+	if [ "$(uname -m)" = "riscv64" ]; then
+		run cp $LIBDIR/libtinfo.so.6 /tmp/ruby/lib/
+		if [[ $RUBY_MAJOR -lt 3 || $RUBY_MAJOR -eq 3 && $RUBY_MINOR -lt 3 ]]; then
+			run cp $LIBDIR/libreadline.so.8 /tmp/ruby/lib/
+		fi
+	else
+		run cp $LIBDIR/libtinfo.so.5 /tmp/ruby/lib/
+		if [[ $RUBY_MAJOR -lt 3 || $RUBY_MAJOR -eq 3 && $RUBY_MINOR -lt 3 ]]; then
+			run cp $LIBDIR/libreadline.so.6 /tmp/ruby/lib/
+		fi
 	fi
 else
 	run cp $USRLIBDIR/libtinfo.so.5 /tmp/ruby/lib/
@@ -243,9 +279,19 @@ pushd /tmp/ruby/lib/ruby/gems/$RUBY_COMPAT_VERSION/deplibs/$GEM_PLATFORM
 
 
 if [[ -f "/etc/debian_version" ]]; then
-	run mkdir curses && run cp $LIBDIR/libncursesw.so.5 curses/
-	run cp $USRLIBDIR/{libmenuw.so.5,libformw.so.5} curses/
-	run cp $USRLIBDIR/{libffi.so.6,libffi.so.6.0.1} /tmp/ruby/lib/
+	if [ "$(uname -m)" = "s390x" ] || [ "$(uname -m)" = "ppc64le" ]; then
+		run cp $USRLIBDIR/{libffi.so.6,libffi.so.6.0.4} /tmp/ruby/lib/
+		run mkdir curses && run cp $LIBDIR/libncursesw.so.5 curses/
+		run cp $USRLIBDIR/{libmenuw.so.5,libformw.so.5} curses/
+	elif [ "$(uname -m)" = "riscv64" ]; then
+		run cp $USRLIBDIR/{libffi.so.7,libffi.so.7.1.0} /tmp/ruby/lib/
+		run mkdir curses && run cp $LIBDIR/libncursesw.so.6 curses/
+		run cp $USRLIBDIR/{libmenuw.so.6,libformw.so.6} curses/
+	else
+		run cp $USRLIBDIR/{libffi.so.6,libffi.so.6.0.1} /tmp/ruby/lib/
+		run mkdir curses && run cp $LIBDIR/libncursesw.so.5 curses/
+		run cp $USRLIBDIR/{libmenuw.so.5,libformw.so.5} curses/
+	fi
 	run cp $USRLIBDIR/{libgmp.so,libgmp.so.10} /tmp/ruby/lib/
 else
 	run mkdir curses && run cp $USRLIBDIR/{libncursesw.so.5,libmenuw.so.5,libformw.so.5} curses/
@@ -415,7 +461,7 @@ find /output -name '*.so*'
 
 if $SANITY_CHECK_OUTPUT; then
 	header "Sanity checking build output"
-	env LIBCHECK_ALLOW='libreadline|libtinfo|libformw|libmenuw|libncursesw|libgmp' \
+	env LIBCHECK_ALLOW='libreadline|libtinfo|libformw|libmenuw|libncursesw|libgmp|ld64' \
 		libcheck /output/bin.real/ruby $(find /output -name '*.so')
 fi
 

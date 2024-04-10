@@ -17,6 +17,7 @@ if [[ $SKIP_MYSQL != true ]]; then
 
 		(
 			source /hbb_shlib/activate
+			openssl version
 			run cmake -DCMAKE_INSTALL_PREFIX=/hbb_shlib \
 				-DCMAKE_C_FLAGS="$STATICLIB_CFLAGS" \
 				-DCMAKE_CXX_FLAGS="$STATICLIB_CFLAGS" \

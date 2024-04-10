@@ -132,6 +132,12 @@ header "Installing ICU"
 					echo "32 bit target"
 						CONFIGURE_TARGET="i586-alpine-linux-musl --with-library-bits 32 --enable-64bit-libs false "
 					fi
+				elif grep -q "ubuntu" /etc/os-release; then
+					echo "detected ubuntu"
+					if file /bin/dash | grep 32 >/dev/null; then
+					echo "32 bit target"
+						CONFIGURE_TARGET="i386-linux-gnu --with-library-bits 32 --enable-64bit-libs false "
+					fi
 				fi
 			fi
 			run ./configure $CONFIGURE_TARGET--prefix=/hbb_shlib --disable-samples --disable-tests \

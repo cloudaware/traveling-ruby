@@ -218,7 +218,11 @@ run mkdir curses && run cp $USRLIBDIR/{libncursesw.so.6,libmenuw.so.6,libformw.s
 # run cp /hbb_shlib/lib64/{libffi.so.8,libffi.so.8.1.2} /tmp/ruby/lib/
 
 # ## If using libffi included in the holy build box system
-run cp $USRLIBDIR/{libffi.so.8,libffi.so.8.1.0} /tmp/ruby/lib/
+if [ "$(uname -m)" = "riscv64" ]; then
+	run cp $USRLIBDIR/{libffi.so.8,libffi.so.8.1.4} /tmp/ruby/lib/
+else
+	run cp $USRLIBDIR/{libffi.so.8,libffi.so.8.1.0} /tmp/ruby/lib/
+fi
 popd
 
 echo "Patching rbconfig.rb"
