@@ -1,6 +1,6 @@
 env:
   REPO: you54f/traveling-ruby
-  PKG_DATE: 20240405
+  PKG_DATE: 20240412
   NEXT_TAG: rel-$PKG_DATE
   GITHUB_TOKEN: ENCRYPTED[7f3663f35400d0e1f8e0fec456af6b75a07b0fd2d0632fe1697b8fb73af5e78245144216288d88d2daa681ccd159e07d]
 
@@ -30,7 +30,7 @@ UPLOAD_TASK: &UPLOAD_TASK
       cp "$file" $ruby_version-$gem_version.tar.gz
     done
     ls -l
-    if [[ $CIRRUS_BRANCH == 'main' ]]; then
+    if [[ $CIRRUS_BRANCH == 'additional_platforms' ]]; then
       gh release upload "${NEXT_TAG}" traveling-ruby-*.tar.gz --repo "${REPO}" --clobber
     else
       echo "Not on main branch, skipping upload"
@@ -198,7 +198,7 @@ linux_x64_packager_docker_builder:
 linux_arm64_matrix_docker_builder:
   cpu: 4
   memory: 4G
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-arm64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'main'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-arm64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
   env:
     CIRRUS_ARCH: arm64
     PLATFORM: linux
@@ -210,11 +210,10 @@ linux_arm64_matrix_docker_builder:
   <<: *INSTALL_GH_CLI
   <<: *UPLOAD_TASK
   <<: *BINARY_ATRIFACTS
-
 linux_x64_matrix_docker_builder:
   cpu: 4
   memory: 4G
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-x86_64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'main'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-x86_64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
   env:
     CIRRUS_ARCH: amd64
     PLATFORM: linux
@@ -226,11 +225,70 @@ linux_x64_matrix_docker_builder:
   <<: *INSTALL_GH_CLI
   <<: *UPLOAD_TASK
   <<: *BINARY_ATRIFACTS
-
+linux_ppc64le_matrix_docker_builder:
+  cpu: 4
+  memory: 4G
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-ppc64le\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
+  env:
+    CIRRUS_ARCH: amd64
+    PLATFORM: linux
+    ARCHITECTURES: ppc64le
+    matrix:
+      *RUBY_VERSIONS_MATRIX_LINUX
+  <<: *ENV_CHECK_SCRIPT
+  <<: *rake_package_and_test_docker
+  <<: *INSTALL_GH_CLI
+  <<: *UPLOAD_TASK
+  <<: *BINARY_ATRIFACTS
+linux_s390x_matrix_docker_builder:
+  cpu: 4
+  memory: 4G
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-s390x\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
+  env:
+    CIRRUS_ARCH: amd64
+    PLATFORM: linux
+    ARCHITECTURES: s390x
+    matrix:
+      *RUBY_VERSIONS_MATRIX_LINUX
+  <<: *ENV_CHECK_SCRIPT
+  <<: *rake_package_and_test_docker
+  <<: *INSTALL_GH_CLI
+  <<: *UPLOAD_TASK
+  <<: *BINARY_ATRIFACTS
+linux_riscv64_matrix_docker_builder:
+  cpu: 4
+  memory: 4G
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-riscv64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
+  env:
+    CIRRUS_ARCH: amd64
+    PLATFORM: linux
+    ARCHITECTURES: riscv64
+    matrix:
+      *RUBY_VERSIONS_MATRIX_LINUX
+  <<: *ENV_CHECK_SCRIPT
+  <<: *rake_package_and_test_docker
+  <<: *INSTALL_GH_CLI
+  <<: *UPLOAD_TASK
+  <<: *BINARY_ATRIFACTS
+linux_i386_matrix_docker_builder:
+  cpu: 4
+  memory: 4G
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-i386\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
+  env:
+    CIRRUS_ARCH: amd64
+    PLATFORM: linux
+    ARCHITECTURES: i386
+    matrix:
+      *RUBY_VERSIONS_MATRIX_LINUX
+  <<: *ENV_CHECK_SCRIPT
+  <<: *rake_package_and_test_docker
+  <<: *INSTALL_GH_CLI
+  <<: *UPLOAD_TASK
+  <<: *BINARY_ATRIFACTS
 linux_arm64_alpine_matrix_docker_builder:
   cpu: 4
   memory: 4G
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-musl-arm64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(alpine\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'main'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-musl-arm64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(alpine\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
   env:
     CIRRUS_ARCH: arm64
     PLATFORM: alpine
@@ -242,15 +300,89 @@ linux_arm64_alpine_matrix_docker_builder:
   <<: *INSTALL_GH_CLI
   <<: *UPLOAD_TASK
   <<: *BINARY_ATRIFACTS
-
 linux_x64_alpine_matrix_docker_builder:
   cpu: 4
   memory: 4G
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-musl-x86_64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(alpine\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'main'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-musl-x86_64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(alpine\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
   env:
     CIRRUS_ARCH: amd64
     PLATFORM: alpine
     ARCHITECTURES: x86_64
+    matrix:
+      *RUBY_VERSIONS_MATRIX_LINUX_ALPINE
+  <<: *ENV_CHECK_SCRIPT
+  <<: *rake_package_and_test_docker
+  <<: *INSTALL_GH_CLI
+  <<: *UPLOAD_TASK
+  <<: *BINARY_ATRIFACTS
+linux_ppc64le_alpine_matrix_docker_builder:
+  cpu: 4
+  memory: 4G
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-musl-ppc64le\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
+  env:
+    CIRRUS_ARCH: amd64
+    PLATFORM: alpine
+    ARCHITECTURES: ppc64le
+    matrix:
+      *RUBY_VERSIONS_MATRIX_LINUX_ALPINE
+  <<: *ENV_CHECK_SCRIPT
+  <<: *rake_package_and_test_docker
+  <<: *INSTALL_GH_CLI
+  <<: *UPLOAD_TASK
+  <<: *BINARY_ATRIFACTS
+linux_arm_v6_alpine_matrix_docker_builder:
+  cpu: 4
+  memory: 4G
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-musl-arm-v6\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
+  env:
+    CIRRUS_ARCH: amd64
+    PLATFORM: alpine
+    ARCHITECTURES: arm-v6
+    matrix:
+      *RUBY_VERSIONS_MATRIX_LINUX_ALPINE
+  <<: *ENV_CHECK_SCRIPT
+  <<: *rake_package_and_test_docker
+  <<: *INSTALL_GH_CLI
+  <<: *UPLOAD_TASK
+  <<: *BINARY_ATRIFACTS
+linux_s390x_alpine_matrix_docker_builder:
+  cpu: 4
+  memory: 4G
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-musl-s390x\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
+  env:
+    CIRRUS_ARCH: amd64
+    PLATFORM: alpine
+    ARCHITECTURES: s390x
+    matrix:
+      *RUBY_VERSIONS_MATRIX_LINUX_ALPINE
+  <<: *ENV_CHECK_SCRIPT
+  <<: *rake_package_and_test_docker
+  <<: *INSTALL_GH_CLI
+  <<: *UPLOAD_TASK
+  <<: *BINARY_ATRIFACTS
+linux_riscv64_alpine_matrix_docker_builder:
+  cpu: 4
+  memory: 4G
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-musl-riscv64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
+  env:
+    CIRRUS_ARCH: amd64
+    PLATFORM: alpine
+    ARCHITECTURES: riscv64
+    matrix:
+      *RUBY_VERSIONS_MATRIX_LINUX_ALPINE
+  <<: *ENV_CHECK_SCRIPT
+  <<: *rake_package_and_test_docker
+  <<: *INSTALL_GH_CLI
+  <<: *UPLOAD_TASK
+  <<: *BINARY_ATRIFACTS
+linux_i386_alpine_matrix_docker_builder:
+  cpu: 4
+  memory: 4G
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-musl-i386\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
+  env:
+    CIRRUS_ARCH: amd64
+    PLATFORM: alpine
+    ARCHITECTURES: i386
     matrix:
       *RUBY_VERSIONS_MATRIX_LINUX_ALPINE
   <<: *ENV_CHECK_SCRIPT
@@ -369,7 +501,7 @@ macos_packager_task:
 
 
 macos_arm64_matrix_task:
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos-arm64\).*' || $CIRRUS_BRANCH =~ 'main'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos-arm64\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
   macos_instance:
     # image: traveling-ruby-builder
     # image: ghcr.io/cirruslabs/macos-ventura-vanilla:latest
@@ -390,7 +522,7 @@ macos_arm64_matrix_task:
 
 macos_x86_64_matrix_task:
   timeout_in: 120m
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos-x86_64\).*' || $CIRRUS_BRANCH =~ 'main'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos-x86_64\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
   macos_instance:
     # image: traveling-ruby-builder
     image: ghcr.io/cirruslabs/macos-sonoma-base:latest
@@ -415,7 +547,7 @@ macos_x86_64_matrix_task:
 # ========================================
 
 windows_packager_task: 
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(packager-windows\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(packager\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'main'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(packager-windows\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(packager\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
   env:
     PLATFORM: windows
     matrix:

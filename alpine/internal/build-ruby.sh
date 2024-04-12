@@ -99,6 +99,13 @@ if [ "$(uname -m)" = "x86_64" ] || [ "$(uname -m)" = "ppc64le" ]; then
 fi
 
 
+# add support for python3 
+rm /hbb/bin/libcheck
+cp /system/libcheck /hbb/bin/libcheck
+chmod +x /hbb/bin/libcheck
+python --version || ln -s /usr/bin/python2 /usr/bin/python
+libcheck || true
+
 run openssl version
 # -fvisibility=hidden interferes with native extension compilation
 export CFLAGS="${CFLAGS//-fvisibility=hidden/}"
@@ -386,6 +393,6 @@ find /output -name '*.so*'
 
 if $SANITY_CHECK_OUTPUT; then
 	header "Sanity checking build output"
-	env LIBCHECK_ALLOW='libreadline|libtinfo|libformw|libmenuw|libncursesw|libc.musl-aarch64|libc.musl-x86_64|libc.musl-x86|libc.musl-s390x|libc.musl-ppc64le' \
+	env LIBCHECK_ALLOW='libreadline|libtinfo|libformw|libmenuw|libncursesw|libc.musl-aarch64|libc.musl-x86_64|libc.musl-x86|libc.musl-armhf|libc.musl-s390x|libc.musl-i386|libc.musl-ppc64le|libc.musl-riscv64' \
 		libcheck /output/bin.real/ruby $(find /output -name '*.so')
 fi

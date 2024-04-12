@@ -98,6 +98,12 @@ if [ "$(uname -m)" = "x86_64" ]; then
 	export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/hbb_shlib/lib64/pkgconfig"
 fi
 
+# add support for python3 
+rm /hbb/bin/libcheck
+cp /system/libcheck /hbb/bin/libcheck
+chmod +x /hbb/bin/libcheck
+python --version || ln -s /usr/bin/python2 /usr/bin/python
+libcheck || true
 
 run openssl version
 # -fvisibility=hidden interferes with native extension compilation

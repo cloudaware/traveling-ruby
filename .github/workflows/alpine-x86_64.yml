@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 env:
-  PKG_DATE: 20240405
+  PKG_DATE: 20240412
 
 jobs:
   make-alpine-x86_64:

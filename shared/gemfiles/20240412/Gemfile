@@ -25,3 +25,6 @@ gem 'unf_ext'
 gem 'unicorn', force_ruby_platform: true
 gem 'nokogiri', force_ruby_platform: true
 gem 'mysql2', force_ruby_platform: true
+gem 'bigdecimal'
+gem 'stringio'
+gem 'psych'

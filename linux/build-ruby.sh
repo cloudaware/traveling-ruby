@@ -149,11 +149,17 @@ else
 	TTY_ARGS=(-ti)
 fi
 
+if [[ "$ARCHITECTURE" = "x86_64" ]]; then
+	DOCKER_PLATFORM="amd64"
+else
+	DOCKER_PLATFORM="$ARCHITECTURE"
+fi
+
 exec docker run \
 	"${TTY_ARGS[@]}" \
 	--rm \
 	--init \
-	--platform linux/"${ARCHITECTURE//-//}" \
+	--platform linux/"${DOCKER_PLATFORM//-//}" \
 	-v "$SELFDIR/internal:/system:ro" \
 	-v "$SELFDIR/../shared:/system_shared:ro" \
 	-v "$OUTPUT_DIR:/output" \
