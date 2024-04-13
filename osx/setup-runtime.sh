@@ -358,10 +358,10 @@ cd "$RUNTIME_DIR"
 echo
 
 # To many warnings, suppress them all (disable in case of troubleshooting)
-export CPPFLAGS="-Wno-unused-command-line-argument -Wno-error=incompatible-function-pointer-types"
-export CXXFLAGS="-Wno-unused-command-line-argument -Wno-error=incompatible-function-pointer-types"
-export CFLAGS="-Wno-unused-command-line-argument -Wno-error=incompatible-function-pointer-types"
-
+export CPPFLAGS="-Wno-unused-command-line-argument -Wno-error=incompatible-function-pointer-types -Wno-int-conversion"
+export CXXFLAGS="-Wno-unused-command-line-argument -Wno-error=incompatible-function-pointer-types -Wno-int-conversion"
+export CFLAGS="-Wno-unused-command-line-argument -Wno-error=incompatible-function-pointer-types -Wno-int-conversion"
+# https://gitlab.freedesktop.org/pkg-config/pkg-config/-/issues/81
 header "Installing tool 1/$TOTAL_TOOLS: CMake..."
 if $SKIP_CMAKE; then
 	echo "Skipped."
