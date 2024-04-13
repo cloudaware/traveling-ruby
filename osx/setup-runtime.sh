@@ -358,9 +358,9 @@ cd "$RUNTIME_DIR"
 echo
 
 # To many warnings, suppress them all (disable in case of troubleshooting)
-export CPPFLAGS="-Wno-error=unused-command-line-argument -Wno-error=incompatible-function-pointer-types"
-export CXXFLAGS="-Wno-error=unused-command-line-argument -Wno-error=incompatible-function-pointer-types"
-export CFLAGS="-Wno-error=unused-command-line-argument -Wno-error=incompatible-function-pointer-types"
+export CPPFLAGS="-Wno-unused-command-line-argument -Wno-error=incompatible-function-pointer-types"
+export CXXFLAGS="-Wno-unused-command-line-argument -Wno-error=incompatible-function-pointer-types"
+export CFLAGS="-Wno-unused-command-line-argument -Wno-error=incompatible-function-pointer-types"
 
 header "Installing tool 1/$TOTAL_TOOLS: CMake..."
 if $SKIP_CMAKE; then

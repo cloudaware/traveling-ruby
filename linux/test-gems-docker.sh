@@ -25,6 +25,14 @@ echo "RUBY_VERSION: $RUBY_VERSION"
 
 # ## override for docker platform
 [ "$ARCH" == "x86_64" ] && ARCH="amd64"
+[ "$ARCH" == "riscv64" ] && IMAGE="riscv64/debian:sid-slim"
+[ "$ARCH" == "ppc64le" ] && IMAGE="ppc64le/debian:trixie-slim"
+[ "$ARCH" == "s390x" ] && IMAGE="s390x/debian:stable-slim"
+
+# Issues openssl / libz
+# x86_64
+# s390x
+# i386
 
 echo docker run --platform linux/"${ARCH}" --rm --entrypoint /bin/bash -v $SELFDIR/..:/home "${IMAGE}" -c "./home/shared/test-gems.sh home/linux/"$@"";
 

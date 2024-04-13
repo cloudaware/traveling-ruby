@@ -98,7 +98,7 @@ if [ "$(uname -m)" = "x86_64" ] || [ "$(uname -m)" = "ppc64le" ]; then
 	export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/hbb_shlib/lib64/pkgconfig"
 fi
 
-
+echo $(uname -m)
 # add support for python3 
 rm /hbb/bin/libcheck
 cp /system/libcheck /hbb/bin/libcheck
@@ -230,6 +230,8 @@ if [ "$(uname -m)" = "riscv64" ]; then
 else
 	run cp $USRLIBDIR/{libffi.so.8,libffi.so.8.1.0} /tmp/ruby/lib/
 fi
+
+run cp /usr/lib/libgcc_s.so.1 /tmp/ruby/lib/
 popd
 
 echo "Patching rbconfig.rb"

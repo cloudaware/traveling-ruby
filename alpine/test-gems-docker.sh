@@ -11,7 +11,7 @@ if [ -z "$1" ]; then
     echo "image is optional|default: node:20-alpine"
     exit 1
 fi
-IMAGE=${2:-"node:20-alpine"}
+IMAGE=${2:-"alpine:3.15"}
 if ! command -v docker &> /dev/null
 then
         echo "Error: docker could not be found"
@@ -26,6 +26,8 @@ echo "RUBY_VERSION: $RUBY_VERSION"
 # ## override for docker platform
 [ "$ARCH" == "x86_64" ] && ARCH="amd64"
 
+# note libgcc is required for alpine vanilla images
+# cp /usr/lib/libgcc_s.so.1 /app  
 echo docker run --platform linux/"${ARCH}" --rm --entrypoint /bin/sh -v $SELFDIR/..:/home "${IMAGE}" -c "apk add bash && ./home/shared/test-gems.sh home/alpine/"$@"";
 
 docker run --platform linux/"${ARCH}" --rm --entrypoint /bin/sh -v $SELFDIR/..:/home "${IMAGE}" -c "apk add bash && ./home/shared/test-gems.sh home/alpine/"$@"";
