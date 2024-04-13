@@ -526,15 +526,15 @@ macos_arm64_matrix_task:
   <<: *macos_check
   <<: *cirrus_cli_setup
   <<: *macos_stash_conflicting_paths
-  # <<: *download_macos_runtime
+  <<: *download_macos_runtime
   <<: *rake_package_and_test
-  upload_output_dir_script: cd $PLATFORM && tar -czvf $PLATFORM-runtime.tar.gz runtime
+  # upload_output_dir_script: cd $PLATFORM && tar -czvf $PLATFORM-runtime.tar.gz runtime
   <<: *UPLOAD_TASK
   <<: *BINARY_ATRIFACTS
 
 macos_x86_64_matrix_task:
   timeout_in: 120m
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos-x86_64\).*' || $CIRRUS_BRANCH =~ 'macosruntime'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-macos-x86_64\).*' || $CIRRUS_BRANCH =~ 'macosruntime2'
   macos_instance:
     # image: traveling-ruby-builder
     image: ghcr.io/cirruslabs/macos-sonoma-base:latest
@@ -550,7 +550,7 @@ macos_x86_64_matrix_task:
   # <<: *download_macos_runtime
   install_rosetta_script: softwareupdate --install-rosetta --agree-to-license
   <<: *rake_package_and_test
-  upload_output_dir_script: cd $PLATFORM && tar -czvf $PLATFORM-runtime.tar.gz runtime
+  # upload_output_dir_script: cd $PLATFORM && tar -czvf $PLATFORM-runtime.tar.gz runtime
   <<: *UPLOAD_TASK
   <<: *BINARY_ATRIFACTS
 
