@@ -547,7 +547,7 @@ macos_x86_64_matrix_task:
   <<: *macos_check
   <<: *cirrus_cli_setup
   <<: *macos_stash_conflicting_paths
-  # <<: *download_macos_runtime
+  <<: *download_macos_runtime
   install_rosetta_script: softwareupdate --install-rosetta --agree-to-license
   <<: *rake_package_and_test
   # upload_output_dir_script: cd $PLATFORM && tar -czvf $PLATFORM-runtime.tar.gz runtime
