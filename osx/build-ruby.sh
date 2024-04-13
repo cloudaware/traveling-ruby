@@ -384,6 +384,7 @@ if [[ "$GEMFILE" != "" ]]; then
 	fi
 
 	export BUNDLE_BUILD__NOKOGIRI="--with-xml2-include=$RUNTIME_DIR/include/libxml2"
+	export BUNDLE_BUILD__PSYCH="--with-libyaml-include=$RUNTIME_DIR/include"
 	export BUNDLE_BUILD__FFI="--use-system-libraries"
 	export BUNDLE_BUILD__MYSQL2="--with-mysql_config"
 	export BUNDLE_BUILD__CHARLOCK_HOLMES="--with-icu-dir=$RUNTIME_DIR"
