@@ -365,6 +365,7 @@ linux_s390x_alpine_matrix_docker_builder:
     matrix:
       *RUBY_VERSIONS_MATRIX_LINUX_ALPINE
   <<: *ENV_CHECK_SCRIPT
+  <<: *INSTALL_EMULATORS_TASK
   <<: *rake_package_and_test_docker
   <<: *INSTALL_GH_CLI
   <<: *UPLOAD_TASK
@@ -380,6 +381,7 @@ linux_riscv64_alpine_matrix_docker_builder:
     matrix:
       *RUBY_VERSIONS_MATRIX_LINUX_ALPINE
   <<: *ENV_CHECK_SCRIPT
+  <<: *INSTALL_EMULATORS_TASK
   <<: *rake_package_and_test_docker
   <<: *INSTALL_GH_CLI
   <<: *UPLOAD_TASK
@@ -524,9 +526,9 @@ macos_arm64_matrix_task:
   <<: *macos_check
   <<: *cirrus_cli_setup
   <<: *macos_stash_conflicting_paths
-  <<: *download_macos_runtime
+  # <<: *download_macos_runtime
   <<: *rake_package_and_test
-  # upload_output_dir_script: cd $PLATFORM && tar -czvf $PLATFORM-runtime.tar.gz runtime
+  upload_output_dir_script: cd $PLATFORM && tar -czvf $PLATFORM-runtime.tar.gz runtime
   <<: *UPLOAD_TASK
   <<: *BINARY_ATRIFACTS
 
@@ -545,10 +547,10 @@ macos_x86_64_matrix_task:
   <<: *macos_check
   <<: *cirrus_cli_setup
   <<: *macos_stash_conflicting_paths
-  <<: *download_macos_runtime
+  # <<: *download_macos_runtime
   install_rosetta_script: softwareupdate --install-rosetta --agree-to-license
   <<: *rake_package_and_test
-  # upload_output_dir_script: cd $PLATFORM && tar -czvf $PLATFORM-runtime.tar.gz runtime
+  upload_output_dir_script: cd $PLATFORM && tar -czvf $PLATFORM-runtime.tar.gz runtime
   <<: *UPLOAD_TASK
   <<: *BINARY_ATRIFACTS
 

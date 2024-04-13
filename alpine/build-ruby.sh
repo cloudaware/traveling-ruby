@@ -157,7 +157,7 @@ fi
 exec docker run \
 	"${TTY_ARGS[@]}" \
 	--rm \
-	-it \
+	--init \
 	--pull always \
 	--platform linux/"${DOCKER_PLATFORM//-//}" \
 	-v "$SELFDIR/internal:/system:ro" \
