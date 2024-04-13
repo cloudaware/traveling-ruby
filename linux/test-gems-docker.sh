@@ -29,11 +29,10 @@ echo "RUBY_VERSION: $RUBY_VERSION"
 [ "$ARCH" == "ppc64le" ] && IMAGE="ppc64le/debian:trixie-slim"
 [ "$ARCH" == "s390x" ] && IMAGE="s390x/debian:stable-slim"
 
-# Issues openssl / libz
-# x86_64
-# s390x
-# i386
+OS_TYPE=$(uname -s)
+if [[ "$OS_TYPE" != "Darwin" && "$OS_TYPE" != "Linux" ]]; then
+    echo docker run --platform linux/"${ARCH}" --rm --entrypoint /bin/bash -v $SELFDIR/..:/home "${IMAGE}" -c \'"./home/shared/test-gems.sh home/linux/"$@""\';
 
-echo docker run --platform linux/"${ARCH}" --rm --entrypoint /bin/bash -v $SELFDIR/..:/home "${IMAGE}" -c "./home/shared/test-gems.sh home/linux/"$@"";
-
-docker run --platform linux/"${ARCH}" --rm --entrypoint /bin/bash -v $SELFDIR/..:/home "${IMAGE}" -c "./home/shared/test-gems.sh home/linux/"$@"";
+else
+    docker run --platform linux/"${ARCH}" --rm --entrypoint /bin/bash -v $SELFDIR/..:/home "${IMAGE}" -c "./home/shared/test-gems.sh home/linux/"$@"";
+fi

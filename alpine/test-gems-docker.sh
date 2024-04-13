@@ -7,8 +7,8 @@ SELFDIR=`cd "$SELFDIR" && pwd`
 if [ -z "$1" ]; then
     echo "Usage: $0 output/<ruby-version>-<arch> <image>"
     echo "example: $0 3.2.3-arm64"
-    echo "image: node:20-alpine"
-    echo "image is optional|default: node:20-alpine"
+    echo "image: alpine:3.15"
+    echo "image is optional|default: alpine:3.15"
     exit 1
 fi
 IMAGE=${2:-"alpine:3.15"}
@@ -25,7 +25,7 @@ echo "RUBY_VERSION: $RUBY_VERSION"
 
 # ## override for docker platform
 [ "$ARCH" == "x86_64" ] && ARCH="amd64"
-
+[ "$ARCH" == "riscv64" ] && IMAGE="riscv64/alpine:20210804"
 # note libgcc is required for alpine vanilla images
 # cp /usr/lib/libgcc_s.so.1 /app  
 echo docker run --platform linux/"${ARCH}" --rm --entrypoint /bin/sh -v $SELFDIR/..:/home "${IMAGE}" -c "apk add bash && ./home/shared/test-gems.sh home/alpine/"$@"";

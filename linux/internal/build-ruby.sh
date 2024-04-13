@@ -137,6 +137,10 @@ if [ "$(uname -m)" = "x86_64" ]; then
 	fi
 elif [ "$(uname -m)" = "riscv64" ]; then
 	RUBY_CFG_OPTS="--host riscv64-linux-gnu --build riscv64-linux-gnu"
+elif [ "$(uname -m)" = "s390x" ]; then
+	sed -i 's/^Libs:.*/Libs: -L${libdir} -lcrypto -lz -ldl -lpthread/' /hbb_shlib/lib64/pkgconfig/libcrypto.pc
+	sed -i '/^Libs.private:.*/d' /hbb_shlib/lib64/pkgconfig/libcrypto.pc
+	cat /hbb_shlib/lib64/pkgconfig/libcrypto.pc
 fi
 
 if $SETUP_SOURCE; then
@@ -303,7 +307,13 @@ else
 	run mkdir curses && run cp $USRLIBDIR/{libncursesw.so.5,libmenuw.so.5,libformw.so.5} curses/
 	run cp $USRLIBDIR/{libffi.so.6,libffi.so.6.0.1} /tmp/ruby/lib/
 fi
-
+if [[ -f "/etc/debian_version" ]]; then
+	if [ "$(uname -m)" = "x86_64" ]; then
+		if file /bin/dash | grep 32 >/dev/null; then
+			run cp $LIBDIR/libgcc_s.so.1 /tmp/ruby/lib/
+		fi
+	fi
+fi
 popd
 
 echo "Patching rbconfig.rb"
