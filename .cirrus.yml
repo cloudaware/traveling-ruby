@@ -33,7 +33,7 @@ UPLOAD_TASK: &UPLOAD_TASK
       cp "$file" $ruby_version-$gem_version.tar.gz
     done
     ls -l
-    if [[ $CIRRUS_BRANCH == 'macosruntime' ]]; then
+    if [[ $CIRRUS_BRANCH == 'additional_platforms' ]]; then
       gh release upload "${NEXT_TAG}" traveling-ruby-*.tar.gz --repo "${REPO}" --clobber
     else
       echo "Not on main branch, skipping upload"
@@ -216,7 +216,7 @@ linux_arm64_matrix_docker_builder:
 linux_x64_matrix_docker_builder:
   cpu: 4
   memory: 4G
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-x86_64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'main'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-x86_64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
   env:
     CIRRUS_ARCH: amd64
     PLATFORM: linux
@@ -247,7 +247,7 @@ linux_ppc64le_matrix_docker_builder:
 linux_s390x_matrix_docker_builder:
   cpu: 4
   memory: 4G
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-s390x\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'main'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-s390x\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
   env:
     CIRRUS_ARCH: amd64
     PLATFORM: linux
@@ -279,7 +279,7 @@ linux_riscv64_matrix_docker_builder:
 linux_i386_matrix_docker_builder:
   cpu: 4
   memory: 4G
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-i386\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'main'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-i386\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
   env:
     CIRRUS_ARCH: amd64
     PLATFORM: linux
