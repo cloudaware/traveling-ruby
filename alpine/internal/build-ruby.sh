@@ -396,8 +396,10 @@ run mv /tmp/ruby/* /output/
 
 find /output -name '*.so*'
 
+# unable to build libstdc++ on riscv64 alpine
+# so we are copying it in manually
 if [[ $(uname -m) == "riscv64" ]]; then
-	EXTRA_LIBS="|libstdc++.so.6"
+	EXTRA_LIBS="|libstdc++.*"
 fi
 
 if $SANITY_CHECK_OUTPUT; then
