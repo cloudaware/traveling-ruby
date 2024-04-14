@@ -25,7 +25,8 @@ echo "RUBY_VERSION: $RUBY_VERSION"
 
 # ## override for docker platform
 [ "$ARCH" == "x86_64" ] && ARCH="amd64"
-[ "$ARCH" == "riscv64" ] && IMAGE="riscv64/alpine:20210804"
+[ "$ARCH" == "riscv64" ] && IMAGE="riscv64/alpine:edge"
+# riscv64 only works on edge, missing startx on older edge images (3.15 -> 3.19)
 # note libgcc is required for alpine vanilla images
 # cp /usr/lib/libgcc_s.so.1 /app  
 echo docker run --platform linux/"${ARCH}" --rm --entrypoint /bin/sh -v $SELFDIR/..:/home "${IMAGE}" -c "apk add bash && ./home/shared/test-gems.sh home/alpine/"$@"";

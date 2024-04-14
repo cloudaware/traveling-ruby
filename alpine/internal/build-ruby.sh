@@ -232,6 +232,9 @@ else
 fi
 
 run cp /usr/lib/libgcc_s.so.1 /tmp/ruby/lib/
+if [ "$(uname -m)" = "riscv64" ]; then
+	run cp /usr/lib/libstdc++.so.6 /tmp/ruby/lib/
+fi
 popd
 
 echo "Patching rbconfig.rb"
@@ -393,8 +396,12 @@ run mv /tmp/ruby/* /output/
 
 find /output -name '*.so*'
 
+if [[ $(uname -m) == "riscv64" ]]; then
+	EXTRA_LIBS="|libstdc++.so.6"
+fi
+
 if $SANITY_CHECK_OUTPUT; then
 	header "Sanity checking build output"
-	env LIBCHECK_ALLOW='libreadline|libtinfo|libformw|libmenuw|libncursesw|libc.musl-aarch64|libc.musl-x86_64|libc.musl-x86|libc.musl-armhf|libc.musl-s390x|libc.musl-i386|libc.musl-ppc64le|libc.musl-riscv64' \
+	env LIBCHECK_ALLOW="libreadline|libtinfo|libformw|libmenuw|libncursesw|libc.musl-aarch64|libc.musl-x86_64|libc.musl-x86|libc.musl-armhf|libc.musl-s390x|libc.musl-i386|libc.musl-ppc64le|libc.musl-riscv64$EXTRA_LIBS" \
 		libcheck /output/bin.real/ruby $(find /output -name '*.so')
 fi
