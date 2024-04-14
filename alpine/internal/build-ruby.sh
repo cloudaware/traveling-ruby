@@ -153,7 +153,7 @@ elif [[ "$RUBY_PATCH" == "snapshot" ]]; then
 	echo "RUBY_PREVIEW=$RUBY_PREVIEW"
 	echo "RUBY_MAJOR_MINOR=$RUBY_MAJOR_MINOR"
 else 
-	RUBY_DL_PATH="snapshot"
+	RUBY_DL_PATH="$RUBY_MAJOR.$RUBY_MINOR"
 	RUBY_DL_FILENAME="ruby-$RUBY_VERSION"
 fi
 if [[ "$RUBY_MAJOR" -lt 3 ]]; then
