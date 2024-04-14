@@ -97,3 +97,13 @@ should we create a full fat bundler, that has all the gem extensions pre-install
   - x86_64 package fails when emulated in vm's on darwin-arm64 with unexpected ucrtbase.dll error
     - Workaround, use x86 package on darwin-arm64
     - Workaround, use arm64 package on darwin-arm64
+
+## Snapshot releases
+
+- https://www.ruby-lang.org/en/downloads/
+- https://cache.ruby-lang.org/pub/ruby/snapshot/snapshot-ruby_3_3.tar.gz
+- `snapshot-ruby_3_3`
+- `snapshot-master`
+
+- Windows
+  - `rubyinstaller-head`

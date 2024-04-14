@@ -5,9 +5,6 @@ SELFDIR=`dirname "$0"`
 SELFDIR=`cd "$SELFDIR" && pwd`
 source "$SELFDIR/library.sh"
 BUNDLER_VERSION=`cat "$SELFDIR/../BUNDLER_VERSION.txt"`
-if [[ "$RUBY_VERSIONS" < "3.0.0" ]]; then
-    BUNDLER_VERSION="2.4.22"
-fi
 BUILD_OUTPUT_DIR=
 RUBY_PACKAGE=
 GEM_NATIVE_EXTENSIONS_DIR=
@@ -46,6 +43,7 @@ function usage()
 	echo "  -r PATH    Package Ruby into given file"
 	echo "  -E DIR     Package gem native extensions into the given directory"
 	echo "  -f         Package Ruby with full gem set (not just default gems)"
+	echo "  -b         Bundler version to package (default: $BUNDLER_VERSION)"
 	echo "  -h         Show this help"
 }
 
@@ -102,6 +100,12 @@ parse_options "$@"
 export GZIP=--best
 load_ruby_info "$BUILD_OUTPUT_DIR"
 
+echo "RUBY_COMPAT_VERSION=$RUBY_COMPAT_VERSION"
+
+RUBY_MAJOR=`echo $RUBY_COMPAT_VERSION | cut -d . -f 1`
+if [[ "$RUBY_MAJOR" -lt 3 ]]; then
+	BUNDLER_VERSION="2.4.22"
+fi
 if
 	[[ "$RUBY_PACKAGE_FULL" == "true" ]]
 then

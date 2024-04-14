@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 set -e
-if [[ "$RUBY_VERSION" < "3.0" ]]; then
-    BUNDLER_VERSION="2.4.22"
-fi
 # shellcheck source=shared/library.sh
 source /system_shared/library.sh
 
@@ -111,6 +108,8 @@ run openssl version
 export CFLAGS="${CFLAGS//-fvisibility=hidden/}"
 export CXXFLAGS="${CXXFLAGS//-fvisibility=hidden/}"
 
+echo $RUBY_VERSION
+echo "RUBY_VERSION=$RUBY_VERSION"
 RUBY_MAJOR=`echo $RUBY_VERSION | cut -d . -f 1`
 RUBY_MINOR=`echo $RUBY_VERSION | cut -d . -f 2`
 RUBY_PATCH=`echo $RUBY_VERSION | cut -d . -f 3 | cut -d - -f 1`
@@ -122,32 +121,70 @@ echo "RUBY_PATCH=$RUBY_PATCH"
 echo "RUBY_PREVIEW=$RUBY_PREVIEW"
 echo "RUBY_MAJOR_MINOR=$RUBY_MAJOR_MINOR"
 
-if [[ ! -e /ruby-$RUBY_VERSION.tar.gz ]]; then
+if [[ "$RUBY_MAJOR" == "snapshot-master" ]]; then
+	RUBY_DL_PATH="snapshot"
+	RUBY_DL_FILENAME="$RUBY_VERSION"
+	RUBY_VERSION="3.4.0-dev"
+	RUBY_MAJOR=`echo $RUBY_VERSION | cut -d . -f 1`
+	RUBY_MINOR=`echo $RUBY_VERSION | cut -d . -f 2`
+	RUBY_PATCH=`echo $RUBY_VERSION | cut -d . -f 3 | cut -d - -f 1`
+	RUBY_PREVIEW=`echo $RUBY_VERSION | grep -e '-' | cut -d - -f 2`
+	RUBY_MAJOR_MINOR="$RUBY_MAJOR.$RUBY_MINOR"
+	echo "RUBY_MAJOR=$RUBY_MAJOR"
+	echo "RUBY_MINOR=$RUBY_MINOR"
+	echo "RUBY_PATCH=$RUBY_PATCH"
+	echo "RUBY_PREVIEW=$RUBY_PREVIEW"
+	echo "RUBY_MAJOR_MINOR=$RUBY_MAJOR_MINOR"
+elif [[ "$RUBY_PATCH" == "snapshot" ]]; then
+	RUBY_DL_PATH="snapshot"
+	RUBY_DL_FILENAME="$RUBY_VERSION"
+	RUBY_VERSION="${RUBY_VERSION//snapshot-ruby_/}"
+	RUBY_VERSION="${RUBY_VERSION//_/.}"
+	RUBY_VERSION="${RUBY_VERSION//_/-}"
+	RUBY_VERSION="$RUBY_VERSION.0"
+	RUBY_MAJOR=`echo $RUBY_VERSION | cut -d . -f 1`
+	RUBY_MINOR=`echo $RUBY_VERSION | cut -d . -f 2`
+	RUBY_PATCH=`echo $RUBY_VERSION | cut -d . -f 3 | cut -d - -f 1`
+	RUBY_PREVIEW=`echo $RUBY_VERSION | grep -e '-' | cut -d - -f 2`
+	RUBY_MAJOR_MINOR="$RUBY_MAJOR.$RUBY_MINOR"
+	echo "RUBY_MAJOR=$RUBY_MAJOR"
+	echo "RUBY_MINOR=$RUBY_MINOR"
+	echo "RUBY_PATCH=$RUBY_PATCH"
+	echo "RUBY_PREVIEW=$RUBY_PREVIEW"
+	echo "RUBY_MAJOR_MINOR=$RUBY_MAJOR_MINOR"
+else 
+	RUBY_DL_PATH="snapshot"
+	RUBY_DL_FILENAME="ruby-$RUBY_VERSION"
+fi
+if [[ "$RUBY_MAJOR" -lt 3 ]]; then
+    BUNDLER_VERSION="2.4.22"
+fi
+if [[ ! -e /$RUBY_DL_FILENAME.tar.gz ]]; then
 	header "Downloading Ruby source"
-	run rm -f /ruby-$RUBY_VERSION.tar.gz.tmp
-	run wget -O /ruby-$RUBY_VERSION.tar.gz.tmp \
-		https://cache.ruby-lang.org/pub/ruby/$RUBY_MAJOR_MINOR/ruby-$RUBY_VERSION.tar.gz
-	run mv /ruby-$RUBY_VERSION.tar.gz.tmp /ruby-$RUBY_VERSION.tar.gz
+	run rm -f /$RUBY_DL_FILENAME.tar.gz.tmp
+	run wget -O /$RUBY_DL_FILENAME.tar.gz.tmp \
+		https://cache.ruby-lang.org/pub/ruby/$RUBY_DL_PATH/$RUBY_DL_FILENAME.tar.gz
+	run mv /$RUBY_DL_FILENAME.tar.gz.tmp /$RUBY_DL_FILENAME.tar.gz
 	echo
 fi
 
 if $SETUP_SOURCE; then
 	header "Extracting source code"
-	run rm -rf /tmp/ruby-$RUBY_VERSION
-	run tar xzf /ruby-$RUBY_VERSION.tar.gz
-	echo "Entering ruby-$RUBY_VERSION"
-	cd ruby-$RUBY_VERSION
+	run rm -rf /tmp/$RUBY_DL_FILENAME
+	run tar xzf /$RUBY_DL_FILENAME.tar.gz
+	echo "Entering $RUBY_DL_FILENAME"
+	cd $RUBY_DL_FILENAME
 	echo
 
 	header "Configuring"
 	run ./configure \
 		--prefix /tmp/ruby \
 		--disable-install-doc \
-		--with-out-ext=tk,sdbm,gdbm,dbm,dl,coverage
+		--with-out-ext=tk,sdbm,gdbm,dbm,dl,coverage $RUBY_CFG_OPTS
 	echo
 else
-	echo "Entering ruby-$RUBY_VERSION"
-	cd ruby-$RUBY_VERSION
+	echo "Entering $RUBY_DL_FILENAME"
+	cd $RUBY_DL_FILENAME
 	echo
 fi
 

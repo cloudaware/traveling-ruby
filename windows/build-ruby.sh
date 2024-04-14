@@ -6,18 +6,21 @@ SELFDIR=`cd "$SELFDIR" && pwd`
 source "$SELFDIR/../shared/library.sh"
 
 BUNDLER_VERSION=`cat "$SELFDIR/../BUNDLER_VERSION.txt"`
-RUBY_VERSIONS=(`cat "$SELFDIR/../RUBY_VERSIONS.txt"`)
+# RUBY_VERSIONS=(`cat "$SELFDIR/../RUBY_VERSIONS.txt"`)
 RUBYGEMS_VERSION=`cat "$SELFDIR/../RUBYGEMS_VERSION.txt"`
-N_RUBY_VERSIONS=${#RUBY_VERSIONS[@]}
-LAST_RUBY_VERSION_INDEX=$((N_RUBY_VERSIONS - 1))
+# N_RUBY_VERSIONS=${#RUBY_VERSIONS[@]}
+# LAST_RUBY_VERSION_INDEX=$((N_RUBY_VERSIONS - 1))
 
 CACHE_DIR=
 OUTPUT_DIR=
 ARCHITECTURE=x86_64
-RUBY_VERSION=${RUBY_VERSIONS[$LAST_RUBY_VERSION_INDEX]}
-if [[ "$RUBY_VERSION" < "3.0" ]]; then
-    BUNDLER_VERSION="2.4.22"
-fi
+# RUBY_VERSION=${RUBY_VERSIONS[$LAST_RUBY_VERSION_INDEX]}
+# RUBY_MAJOR=`echo $RUBY_VERSIONS | cut -d . -f 1`
+# echo "RUBY_VERSION: $RUBY_VERSIONS"
+# echo "RUBY_MAJOR: $RUBY_MAJOR"
+# if [[ "$RUBY_MAJOR" -lt 3 ]] || []; then
+#     BUNDLER_VERSION="2.4.22"
+# fi
 RELEASE_NUM=1
 
 function usage()
@@ -131,8 +134,22 @@ if [[ "$ARCHITECTURE" = "x86_64" ]]; then
 else
 	RUBY_FILE_ARCH="$ARCHITECTURE"
 fi
-RUBY_FILE="rubyinstaller-$RUBY_VERSION-$RELEASE_NUM-$RUBY_FILE_ARCH.7z"
-RUBY_URL="https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-$RUBY_VERSION-$RELEASE_NUM/$RUBY_FILE"
+if [[ $RUBY_VERSION = "rubyinstaller-head" ]]; then
+	RUBY_DL_VERSION=head
+	RUBY_VERSION=3.4.0-dev
+	RI_NAME="rubyinstaller"
+	BUNDLER_VERSION=$BUNDLER_VERSION
+else
+	RUBY_DL_VERSION=$RUBY_VERSION
+	RUBY_REL_NO="-$RELEASE_NUM"
+	RI_NAME="RubyInstaller"
+	RUBY_MAJOR=`echo $RUBY_VERSION | cut -d . -f 1`
+	if [[ "$RUBY_MAJOR" -lt 3 ]]; then
+	    BUNDLER_VERSION="2.4.22"
+	fi
+fi
+RUBY_FILE="rubyinstaller-$RUBY_DL_VERSION$RUBY_REL_NO-$RUBY_FILE_ARCH.7z"
+RUBY_URL="https://github.com/oneclick/rubyinstaller2/releases/download/$RI_NAME-$RUBY_DL_VERSION$RUBY_REL_NO/$RUBY_FILE"
 
 
 header "Downloading Ruby..."
@@ -164,8 +181,8 @@ header "Extracting Ruby..."
 if [[ $? != 0 ]]; then
 	exit 1
 fi
-run mv "$OUTPUT_DIR/rubyinstaller-$RUBY_VERSION-$RELEASE_NUM-$RUBY_FILE_ARCH"/* "$OUTPUT_DIR/"
-run rm -rf "$OUTPUT_DIR/rubyinstaller-$RUBY_VERSION-$RELEASE_NUM-$RUBY_FILE_ARCH"
+run mv "$OUTPUT_DIR/$RI_NAME-$RUBY_DL_VERSION$RUBY_REL_NO-$RUBY_FILE_ARCH"/* "$OUTPUT_DIR/"
+run rm -rf "$OUTPUT_DIR/$RI_NAME-$RUBY_DL_VERSION$RUBY_REL_NO-$RUBY_FILE_ARCH"
 echo
 
 

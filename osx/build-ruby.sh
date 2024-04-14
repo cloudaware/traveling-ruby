@@ -15,9 +15,7 @@ RUNTIME_DIR=
 OUTPUT_DIR=
 ARCHITECTURE=$(uname -m)
 RUBY_VERSION=${RUBY_VERSIONS[0]}
-if [[ "$RUBY_VERSION" < "3.0" ]]; then
-    BUNDLER_VERSION="2.4.22"
-fi
+
 WORKDIR=
 OWNS_WORKDIR=true
 CONCURRENCY=$(sysctl -n hw.ncpu)
@@ -244,12 +242,50 @@ echo "RUBY_PATCH=$RUBY_PATCH"
 echo "RUBY_PREVIEW=$RUBY_PREVIEW"
 echo "RUBY_MAJOR_MINOR=$RUBY_MAJOR_MINOR"
 
-if [[ ! -e "$RUNTIME_DIR/ruby-$RUBY_VERSION.tar.gz" ]]; then
+if [[ "$RUBY_MAJOR" == "snapshot-master" ]]; then
+	RUBY_DL_PATH="snapshot"
+	RUBY_DL_FILENAME="$RUBY_VERSION"
+	RUBY_VERSION="3.4.0-dev"
+	RUBY_MAJOR=`echo $RUBY_VERSION | cut -d . -f 1`
+	RUBY_MINOR=`echo $RUBY_VERSION | cut -d . -f 2`
+	RUBY_PATCH=`echo $RUBY_VERSION | cut -d . -f 3 | cut -d - -f 1`
+	RUBY_PREVIEW=`echo $RUBY_VERSION | grep -e '-' | cut -d - -f 2`
+	RUBY_MAJOR_MINOR="$RUBY_MAJOR.$RUBY_MINOR"
+	echo "RUBY_MAJOR=$RUBY_MAJOR"
+	echo "RUBY_MINOR=$RUBY_MINOR"
+	echo "RUBY_PATCH=$RUBY_PATCH"
+	echo "RUBY_PREVIEW=$RUBY_PREVIEW"
+	echo "RUBY_MAJOR_MINOR=$RUBY_MAJOR_MINOR"
+elif [[ "$RUBY_PATCH" == "snapshot" ]]; then
+	RUBY_DL_PATH="snapshot"
+	RUBY_DL_FILENAME="$RUBY_VERSION"
+	RUBY_VERSION="${RUBY_VERSION//snapshot-ruby_/}"
+	RUBY_VERSION="${RUBY_VERSION//_/.}"
+	RUBY_VERSION="${RUBY_VERSION//_/-}"
+	RUBY_VERSION="$RUBY_VERSION.0"
+	RUBY_MAJOR=`echo $RUBY_VERSION | cut -d . -f 1`
+	RUBY_MINOR=`echo $RUBY_VERSION | cut -d . -f 2`
+	RUBY_PATCH=`echo $RUBY_VERSION | cut -d . -f 3 | cut -d - -f 1`
+	RUBY_PREVIEW=`echo $RUBY_VERSION | grep -e '-' | cut -d - -f 2`
+	RUBY_MAJOR_MINOR="$RUBY_MAJOR.$RUBY_MINOR"
+	echo "RUBY_MAJOR=$RUBY_MAJOR"
+	echo "RUBY_MINOR=$RUBY_MINOR"
+	echo "RUBY_PATCH=$RUBY_PATCH"
+	echo "RUBY_PREVIEW=$RUBY_PREVIEW"
+	echo "RUBY_MAJOR_MINOR=$RUBY_MAJOR_MINOR"
+else 
+	RUBY_DL_PATH="snapshot"
+	RUBY_DL_FILENAME="$RUBY_VERSION"
+fi
+if [[ "$RUBY_MAJOR" -lt 3 ]]; then
+    BUNDLER_VERSION="2.4.22"
+fi
+if [[ ! -e "$RUNTIME_DIR/$RUBY_DL_FILENAME.tar.gz" ]]; then
 	header "Downloading Ruby source code..."
-	run rm -f "$RUNTIME_DIR/ruby-$RUBY_VERSION.tar.gz.tmp"
-	run curl --fail -L -o "$RUNTIME_DIR/ruby-$RUBY_VERSION.tar.gz.tmp" \
-		http://cache.ruby-lang.org/pub/ruby/$RUBY_MAJOR_MINOR/ruby-$RUBY_VERSION.tar.gz
-	run mv "$RUNTIME_DIR/ruby-$RUBY_VERSION.tar.gz.tmp" "$RUNTIME_DIR/ruby-$RUBY_VERSION.tar.gz"
+	run rm -f "$RUNTIME_DIR/$RUBY_DL_FILENAME.tar.gz.tmp"
+	run curl --fail -L -o "$RUNTIME_DIR/$RUBY_DL_FILENAME.tar.gz.tmp" \
+		https://cache.ruby-lang.org/pub/ruby/$RUBY_DL_PATH/$RUBY_DL_FILENAME.tar.gz
+	run mv "$RUNTIME_DIR/$RUBY_DL_FILENAME.tar.gz.tmp" "$RUNTIME_DIR/$RUBY_DL_FILENAME.tar.gz"
 	echo
 fi
 
@@ -279,11 +315,11 @@ echo "Entering working directory $WORKDIR"
 pushd "$WORKDIR" >/dev/null
 
 if $SETUP_SOURCE; then
-	run rm -rf "ruby-$RUBY_VERSION"
-	run tar xzf "$RUNTIME_DIR/ruby-$RUBY_VERSION.tar.gz"
+	run rm -rf "$RUBY_DL_FILENAME"
+	run tar xzf "$RUNTIME_DIR/$RUBY_DL_FILENAME.tar.gz"
 fi
-echo "Entering ruby-$RUBY_VERSION"
-pushd "ruby-$RUBY_VERSION" >/dev/null
+echo "Entering $RUBY_DL_FILENAME"
+pushd "$RUBY_DL_FILENAME" >/dev/null
 echo
 
 
@@ -415,8 +451,8 @@ find . -name '*.bundle'
 find . -name '*.dylib'
 (
 	set -o pipefail
-	find . -name '*.bundle' | xargs strip -S
-	find . -name '*.dylib' | xargs strip -S
+	find . -name '*.bundle' | xargs strip -S || true
+	find . -name '*.dylib' | xargs strip -S || true
 )
 [[ $? == 0 ]]
 run rm bin/{erb,rdoc,ri}

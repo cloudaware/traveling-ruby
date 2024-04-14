@@ -99,21 +99,24 @@ RUBY_VERSIONS_LATEST_MATRIX: &RUBY_VERSIONS_LATEST_MATRIX
   RUBY_VERSIONS: 2.6.10
 
 RUBY_VERSIONS_MATRIX_MACOS: &RUBY_VERSIONS_MATRIX_MACOS
+  RUBY_VERSIONS: master-snapshot
   RUBY_VERSIONS: 3.3.0
   RUBY_VERSIONS: 3.2.3
   RUBY_VERSIONS: 3.1.4
   # RUBY_VERSIONS: 3.0.6
 
 RUBY_VERSIONS_MATRIX_LINUX: &RUBY_VERSIONS_MATRIX_LINUX
+  RUBY_VERSIONS: master-snapshot
   RUBY_VERSIONS: 3.3.0
   RUBY_VERSIONS: 3.2.3
-  RUBY_VERSIONS: 3.1.4
+  # RUBY_VERSIONS: 3.1.4
   # RUBY_VERSIONS: 3.0.4
   # RUBY_VERSIONS: 2.6.10
   # RUBY_VERSIONS: 3.0.6
   # RUBY_VERSIONS: 2.7.8
 
 RUBY_VERSIONS_MATRIX_LINUX_ALPINE: &RUBY_VERSIONS_MATRIX_LINUX_ALPINE
+  RUBY_VERSIONS: master-snapshot
   RUBY_VERSIONS: 3.3.0
   RUBY_VERSIONS: 3.2.3
   RUBY_VERSIONS: 3.1.4
@@ -229,6 +232,7 @@ linux_x64_matrix_docker_builder:
   <<: *UPLOAD_TASK
   <<: *BINARY_ATRIFACTS
 linux_ppc64le_matrix_docker_builder:
+  timeout_in: 120m
   cpu: 4
   memory: 4G
   only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-ppc64le\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
@@ -245,6 +249,7 @@ linux_ppc64le_matrix_docker_builder:
   <<: *UPLOAD_TASK
   <<: *BINARY_ATRIFACTS
 linux_s390x_matrix_docker_builder:
+  timeout_in: 120m
   cpu: 4
   memory: 4G
   only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-s390x\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
@@ -261,6 +266,7 @@ linux_s390x_matrix_docker_builder:
   <<: *UPLOAD_TASK
   <<: *BINARY_ATRIFACTS
 linux_riscv64_matrix_docker_builder:
+  timeout_in: 120m
   cpu: 4
   memory: 4G
   only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-riscv64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
@@ -277,6 +283,7 @@ linux_riscv64_matrix_docker_builder:
   <<: *UPLOAD_TASK
   <<: *BINARY_ATRIFACTS
 linux_i386_matrix_docker_builder:
+  timeout_in: 120m
   cpu: 4
   memory: 4G
   only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-i386\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
@@ -323,6 +330,7 @@ linux_x64_alpine_matrix_docker_builder:
   <<: *UPLOAD_TASK
   <<: *BINARY_ATRIFACTS
 linux_ppc64le_alpine_matrix_docker_builder:
+  timeout_in: 120m
   cpu: 4
   memory: 4G
   only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-musl-ppc64le\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
@@ -340,6 +348,7 @@ linux_ppc64le_alpine_matrix_docker_builder:
   <<: *BINARY_ATRIFACTS
 
 # linux_arm_v6_alpine_matrix_docker_builder:
+#   timeout_in: 120m
 #   cpu: 4
 #   memory: 4G
 #   only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-musl-arm-v6\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'main'
@@ -357,6 +366,7 @@ linux_ppc64le_alpine_matrix_docker_builder:
 #   <<: *BINARY_ATRIFACTS
 
 linux_s390x_alpine_matrix_docker_builder:
+  timeout_in: 120m
   cpu: 4
   memory: 4G
   only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-musl-s390x\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
@@ -373,6 +383,7 @@ linux_s390x_alpine_matrix_docker_builder:
   <<: *UPLOAD_TASK
   <<: *BINARY_ATRIFACTS
 linux_riscv64_alpine_matrix_docker_builder:
+  timeout_in: 120m
   cpu: 4
   memory: 4G
   only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-musl-riscv64\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
@@ -389,6 +400,7 @@ linux_riscv64_alpine_matrix_docker_builder:
   <<: *UPLOAD_TASK
   <<: *BINARY_ATRIFACTS
 linux_i386_alpine_matrix_docker_builder:
+  timeout_in: 120m
   cpu: 4
   memory: 4G
   only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix-linux-musl-i386\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
@@ -561,7 +573,7 @@ macos_x86_64_matrix_task:
 # ========================================
 
 windows_packager_task: 
-  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(packager-windows\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(packager\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'main'
+  only_if: $CIRRUS_CHANGE_TITLE =~ 'ci\(packager-windows\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(packager\).*' || $CIRRUS_CHANGE_TITLE =~ 'ci\(matrix\).*' || $CIRRUS_BRANCH =~ 'additional_platforms'
   env:
     PLATFORM: windows
     matrix:
