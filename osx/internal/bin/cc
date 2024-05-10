@@ -16,12 +16,12 @@ if [[ "$@" =~ $REGEX ]]; then
 	fi
 	exec "${CC[@]}" "${ARGS[@]}" "$@"
 else
-	if [[ "$RUNTIME_DIR" != "" ]]; then
+	if [[ "$RUNTIME_DIR" != "" && ! "$@" =~ "yjit.a" ]]; then
 		ARGS+=(-rpath "$RUNTIME_DIR/lib" "-L$RUNTIME_DIR/lib")
 	fi
+	if [[ "$RUNTIME_DIR" != "" && ! "$@" =~ "yjit.a" ]]; then
+		EXTRA_ARGS+=("-Wl,-headerpad_max_install_names" -rpath "@executable_path/../lib" -rpath "@loader_path")
+	fi
 	exec "${CC[@]}" \
-		-Wl,-headerpad_max_install_names \
-		-rpath "@executable_path/../lib" \
-		-rpath "@loader_path" \
-		"${ARGS[@]}" "$@"
+		"${EXTRA_ARGS[@]}" "${ARGS[@]}" "$@"
 fi

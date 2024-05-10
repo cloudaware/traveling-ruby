@@ -97,9 +97,14 @@ if [ "$(uname -m)" = "x86_64" ]; then
 	export SHLIB_LDFLAGS="$SHLIB_LDFLAGS -L/hbb_shlib/lib64"
 	export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/hbb_shlib/lib64/pkgconfig"
 fi
-
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 run openssl version
+export PATH="$HOME/.cargo/bin:$PATH"
+run rustc --version
+run rustup install 1.58.0
+run rustup default 1.58.0
+run rustc --version
 # -fvisibility=hidden interferes with native extension compilation
 export CFLAGS="${CFLAGS//-fvisibility=hidden/}"
 export CXXFLAGS="${CXXFLAGS//-fvisibility=hidden/}"
