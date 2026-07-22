@@ -58,8 +58,7 @@ jobs:
       #     path: macos/runtime/
       #     key: ${{ steps.cache-key.outputs.key }}
       
-      - name: Build runtime
-        if: github.event.inputs.clear_cache == 'true'
+      - name: Build runtime (OpenSSL 3.6.3)
         run: |
           echo "Building new runtime..."
           ls /Applications/Xcode*
@@ -76,11 +75,9 @@ jobs:
           ls -la macos/runtime/ || echo "Runtime directory not found"
 
       - name: package macos x86_64 runtime
-        if: github.event.inputs.clear_cache == 'true'
-        run: ./scripts/package-macos-runtime.sh     
+        run: ./scripts/package-macos-runtime.sh
 
       - name: 'Upload Runtime - macos x86_64'
-        if: github.event.inputs.clear_cache == 'true'
         uses: actions/upload-artifact@v5
         with:
           name: macos-runtime-x86_64-gha.tar.gz
@@ -120,10 +117,16 @@ jobs:
       #     key: ${{ needs.package-runtime.outputs.cache-key }}
       #     fail-on-cache-miss: true
       
-      - name: download macos x86_64 runtime
-        run: ./scripts/download-macos-runtime.sh
-        env:
-          RUBY_VERSIONS: ${{ matrix.ruby-version }}
+      - name: download freshly-built runtime (OpenSSL 3.6.3)
+        uses: actions/download-artifact@v5
+        with:
+          name: macos-runtime-x86_64-gha.tar.gz
+          path: macos/
+      - name: extract runtime
+        run: |
+          cd macos
+          tar -xzf macos-runtime-*.tar.gz
+          ls -la runtime | head
 
       - name: build x86_64
         run: |

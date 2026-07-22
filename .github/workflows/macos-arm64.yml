@@ -14,6 +14,15 @@ on:
         required: false
         default: false
         type: boolean
+      ruby_version:
+        description: 'Ruby version to build (blank = all default versions)'
+        required: false
+        default: '3.3.10'
+      build_gems:
+        description: 'Also build and package native gems'
+        type: boolean
+        required: false
+        default: false
 
 env:
   PKG_DATE: 20251122
@@ -49,8 +58,7 @@ jobs:
       #     path: macos/runtime/
       #     key: ${{ steps.cache-key.outputs.key }}
       
-      - name: Build runtime
-        if: github.event.inputs.clear_cache == 'true'
+      - name: Build runtime (OpenSSL 3.6.3)
         run: |
           echo "Building new runtime..."
           ls /Applications/Xcode*
@@ -67,11 +75,9 @@ jobs:
           ls -la macos/runtime/ || echo "Runtime directory not found"
 
       - name: package macos arm64 runtime
-        if: github.event.inputs.clear_cache == 'true'
-        run: ./scripts/package-macos-runtime.sh     
+        run: ./scripts/package-macos-runtime.sh
 
       - name: 'Upload Runtime - macos arm64'
-        if: github.event.inputs.clear_cache == 'true'
         uses: actions/upload-artifact@v5
         with:
           name: macos-runtime-arm64-gha.tar.gz
@@ -85,7 +91,9 @@ jobs:
       - name: Set Ruby versions
         id: set-versions
         run: |
-          if [[ "${GITHUB_REF}" == *preview* || "${GITHUB_HEAD_REF}" == *preview* || "${GITHUB_REF_NAME}" == *preview* ]]; then
+          if [ -n "${{ github.event.inputs.ruby_version }}" ]; then
+            echo "ruby_versions=['${{ github.event.inputs.ruby_version }}']" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF}" == *preview* || "${GITHUB_HEAD_REF}" == *preview* || "${GITHUB_REF_NAME}" == *preview* ]]; then
             echo "ruby_versions=['3.5.0-preview1','4.0.0-preview2']" >> $GITHUB_OUTPUT
           else
             echo "ruby_versions=['3.2.9','3.3.10','3.4.7']" >> $GITHUB_OUTPUT
@@ -109,22 +117,30 @@ jobs:
       #     key: ${{ needs.package-runtime.outputs.cache-key }}
       #     fail-on-cache-miss: true
       
-      - name: download macos arm64 runtime
-        run: ./scripts/download-macos-runtime.sh     
-        env:
-          RUBY_VERSIONS: ${{ matrix.ruby-version }}
-   
+      - name: download freshly-built runtime (OpenSSL 3.6.3)
+        uses: actions/download-artifact@v5
+        with:
+          name: macos-runtime-arm64-gha.tar.gz
+          path: macos/
+      - name: extract runtime
+        run: |
+          cd macos
+          tar -xzf macos-runtime-*.tar.gz
+          ls -la runtime | head
+
       - name: build arm64
         run: |
             ls /Applications/Xcode*
             cd macos
             rake stash_conflicting_paths
             rake --trace
-            rake package_full
+            if [ "$BUILD_GEMS" = "true" ]; then rake package_full; fi
             rake unstash_conflicting_paths
             ls
         env:
           RUBY_VERSIONS: ${{ matrix.ruby-version }}
+          SKIP_GEMS: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.build_gems != 'true') && 'true' || 'false' }}
+          BUILD_GEMS: ${{ (github.event_name != 'workflow_dispatch' || github.event.inputs.build_gems == 'true') && 'true' || 'false' }}
       # - name: package macos arm64 runtime
       #   run: ./scripts/package-macos-runtime.sh     
       #   env:
@@ -136,7 +152,8 @@ jobs:
       #     name: macos-runtime-arm64-gha-openssl_1_1.tar.gz
       #     path: macos/macos-runtime-*.tar.gz
       - name: package gems
-        run: ./scripts/package-gems.sh    
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.build_gems == 'true' }}
+        run: ./scripts/package-gems.sh
         env:
           PLATFORM: macos
       - name: 'Upload Artifact- macos arm64'
@@ -145,6 +162,7 @@ jobs:
           name: traveling-ruby-${{ env.PKG_DATE }}-${{ matrix.ruby-version }}-macos-arm64.tar.gz
           path: macos/traveling-ruby*.tar.gz
       - name: test
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.build_gems == 'true' }}
         run: |
             cd macos
             rake test
