@@ -3,6 +3,7 @@ set -e
 # shellcheck source=linux/image/functions.sh
 source /tr_build/functions.sh
 
+OPENSSL_VERSION=3.6.3
 MYSQL_LIB_VERSION=6.1.9
 POSTGRESQL_VERSION=15.14
 ICU_RELEASE_VERSION=78.1
@@ -26,11 +27,44 @@ if [[ $ARCHITECTURE == "arm64" ]]; then
 	sed -i 's|baseurl=http://vault.centos.org/centos/7/os/$basearch/|baseurl=https://vault.centos.org/altarch/7/sclo/aarch64/|g' /etc/yum.repos.d/*.repo
 	find /etc/yum.repos.d/ -type f -exec sed -i 's|centos/7|altarch/7|g' {} +
 fi
-run yum install -y wget sudo readline-devel ncurses-devel s3cmd
+run yum install -y wget sudo readline-devel ncurses-devel s3cmd \
+	perl perl-IPC-Cmd perl-Data-Dumper
 # run yum install -y wget sudo readline-devel ncurses-devel s3cmd libyaml-devel libffi-devel
 run mkdir -p /ccache
 run create_user app "App" 1000
 # run pip install awscli==1.19.2
+
+### OpenSSL
+#
+# The Holy Build Box base image ships an older OpenSSL under /hbb_shlib.
+# We build a patched OpenSSL here and install it into the same prefix so it
+# overrides the base image copy. This MUST run before PostgreSQL and libssh2
+# so they link against the updated library. OpenSSL's own defaults place the
+# libs where the build expects them (lib64 on x86_64, lib on arm64).
+
+header "Installing OpenSSL"
+if ! /hbb_shlib/bin/openssl version 2>/dev/null | grep -q "$OPENSSL_VERSION"; then
+	download_and_extract openssl-$OPENSSL_VERSION.tar.gz \
+		openssl-$OPENSSL_VERSION \
+		https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION/openssl-$OPENSSL_VERSION.tar.gz
+
+	(
+		source /hbb_shlib/activate
+		unset LDFLAGS
+		run ./config --prefix=/hbb_shlib --openssldir=/hbb_shlib/ssl \
+			shared no-tests
+		run make -j$MAKE_CONCURRENCY
+		run make install_sw
+	)
+	if [[ "$?" != 0 ]]; then false; fi
+
+	echo "Leaving source directory"
+	popd >/dev/null
+	run rm -rf openssl-$OPENSSL_VERSION
+	run /hbb_shlib/bin/openssl version
+else
+	echo "openssl-$OPENSSL_VERSION Already installed."
+fi
 
 ### MySQL
 

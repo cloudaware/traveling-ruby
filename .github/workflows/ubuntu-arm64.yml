@@ -40,6 +40,12 @@ jobs:
         uses: ruby/setup-ruby@master
         with:
             ruby-version: ${{ matrix.ruby-version }}
+      - name: Build builder image (OpenSSL 3.6.3)
+        run: |
+            cd linux
+            rake image
+        env:
+          ARCHITECTURES: "arm64"
       - name: package
         run: |
             cd linux

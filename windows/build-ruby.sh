@@ -330,6 +330,8 @@ DLLS=(
 	libbrotlicommon.dll
 	libbrotlidec.dll
 	libbrotlienc.dll
+	libcrypto-3-x64.dll
+	libssl-3-x64.dll
 	libcurl-4.dll
 	libiconv-2.dll
 	libidn2-0.dll
