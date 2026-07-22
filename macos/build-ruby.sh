@@ -204,10 +204,6 @@ else
 	WORKDIR="`cd \"$WORKDIR\" && pwd`"
 fi
 TMPBUILDROOT="$WORKDIR/inst"
-if [[ "$SKIP_GEMS" == "true" ]]; then
-	echo "SKIP_GEMS=true: skipping gem installation"
-	GEMFILE=
-fi
 if [[ "$GEMFILE" != "" ]]; then
 	GEMFILE="`absolute_path \"$GEMFILE\"`"
 	if [[ -d "$GEMFILE" ]]; then
@@ -393,8 +389,12 @@ if [[ "$GEMFILE" != "" ]]; then
 	export BUNDLE_BUILD__MYSQL2="--with-mysql_config"
 	export BUNDLE_BUILD__CHARLOCK_HOLMES="--with-icu-dir=$RUNTIME_DIR"
 
-	# Run bundle install.
+	# Run bundle install (skipped when SKIP_GEMS=true).
 	for GEMFILE in "${GEMFILES[@]}"; do
+		if [[ "$SKIP_GEMS" == "true" ]]; then
+			echo "SKIP_GEMS=true: skipping bundle install for $GEMFILE"
+			continue
+		fi
 		run cp "$GEMFILE" ./
 		if [[ -e "$GEMFILE.lock" ]]; then
 			run cp "$GEMFILE.lock" ./

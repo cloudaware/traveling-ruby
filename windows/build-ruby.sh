@@ -216,11 +216,6 @@ fi
 
 echo $GEMFILE
 
-if [[ "$SKIP_GEMS" == "true" ]]; then
-	echo "SKIP_GEMS=true: skipping gem installation"
-	GEMFILE=
-fi
-
 if [[ "$GEMFILE" != "" ]]; then
 	# Restore cached gems.
 	if [[ -e "$CACHE_DIR/vendor" ]]; then
@@ -255,8 +250,12 @@ if [[ "$GEMFILE" != "" ]]; then
 		run "$OUTPUT_DIR/bin/gem" install bundler -v $BUNDLER_VERSION --no-document
 	fi
 
-	# Run bundle install for each Gemfile.
+	# Run bundle install for each Gemfile (skipped when SKIP_GEMS=true).
 	for GEMFILE in "${GEMFILES[@]}"; do
+		if [[ "$SKIP_GEMS" == "true" ]]; then
+			echo "SKIP_GEMS=true: skipping bundle install for $GEMFILE"
+			continue
+		fi
 		run cp "$GEMFILE" ./
 		if [[ -e "$GEMFILE.lock.win" ]] && [[ "$ARCHITECTURE" == "x86_64" ]]; then
 			run cp "$GEMFILE.lock.win" ./Gemfile.lock
