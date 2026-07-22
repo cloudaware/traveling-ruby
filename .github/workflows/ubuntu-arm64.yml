@@ -1,6 +1,16 @@
 name: Linux - arm64 - build from dockerhub builder
 on:
   workflow_dispatch:
+    inputs:
+      ruby_version:
+        description: 'Ruby version to build (blank = all default versions)'
+        required: false
+        default: '3.3.10'
+      build_gems:
+        description: 'Also build and package native gems'
+        type: boolean
+        required: false
+        default: false
   # push:
   #   branches: [ main ]
   # pull_request:
@@ -20,7 +30,9 @@ jobs:
       - name: Set Ruby versions
         id: set-versions
         run: |
-          if [[ "${GITHUB_REF}" == *preview* || "${GITHUB_HEAD_REF}" == *preview* || "${GITHUB_REF_NAME}" == *preview* ]]; then
+          if [ -n "${{ github.event.inputs.ruby_version }}" ]; then
+            echo "ruby_versions=['${{ github.event.inputs.ruby_version }}']" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF}" == *preview* || "${GITHUB_HEAD_REF}" == *preview* || "${GITHUB_REF_NAME}" == *preview* ]]; then
             echo "ruby_versions=['3.5.0-preview1','4.0.0-preview2']" >> $GITHUB_OUTPUT
           else
             echo "ruby_versions=['3.2.9','3.3.10','3.4.7']" >> $GITHUB_OUTPUT
@@ -50,13 +62,23 @@ jobs:
         run: |
             cd linux
             rake
+            ls
+        env:
+          ARCHITECTURES: "arm64"
+          RUBY_VERSIONS: ${{ matrix.ruby-version }}
+          SKIP_GEMS: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.build_gems != 'true') && 'true' || 'false' }}
+      - name: package full (gems)
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.build_gems == 'true' }}
+        run: |
+            cd linux
             rake package_full
             ls
         env:
           ARCHITECTURES: "arm64"
           RUBY_VERSIONS: ${{ matrix.ruby-version }}
       - name: package gems
-        run: ./scripts/package-gems.sh    
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.build_gems == 'true' }}
+        run: ./scripts/package-gems.sh
         env:
           PLATFORM: linux
       - name: 'Upload Artifact - linux arm64'
@@ -65,6 +87,7 @@ jobs:
           name: traveling-ruby-${{ env.PKG_DATE }}-${{ matrix.ruby-version }}-linux-arm64.tar.gz
           path: linux/traveling-ruby*.tar.gz
       - name: test
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.build_gems == 'true' }}
         run: |
             cd linux
             rake test_docker
