@@ -11,12 +11,12 @@ on:
         type: boolean
         required: false
         default: false
-  push:
-    branches: [ main, test/win-ext-arm ]
-  pull_request:
-    branches: [ main ]
-  release:
-    types: [published]
+  # push:
+  #   branches: [ main, test/win-ext-arm ]
+  # pull_request:
+  #   branches: [ main ]
+  # release:
+  #   types: [published]
 
 env:
   PKG_DATE: 20251122
