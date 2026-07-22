@@ -1,6 +1,16 @@
 name: Windows
 on:
   workflow_dispatch:
+    inputs:
+      ruby_version:
+        description: 'Ruby version to build (blank = all default versions)'
+        required: false
+        default: '3.3.10'
+      build_gems:
+        description: 'Also build and package native gems'
+        type: boolean
+        required: false
+        default: false
   push:
     branches: [ main, test/win-ext-arm ]
   pull_request:
@@ -12,7 +22,22 @@ env:
   PKG_DATE: 20251122
 
 jobs:
+  setup-ruby-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.set-versions.outputs.ruby_versions }}
+    steps:
+      - name: Set Ruby versions
+        id: set-versions
+        run: |
+          if [ -n "${{ github.event.inputs.ruby_version }}" ]; then
+            echo "ruby_versions=['${{ github.event.inputs.ruby_version }}']" >> $GITHUB_OUTPUT
+          else
+            echo "ruby_versions=['3.2.9','3.3.10','3.4.7']" >> $GITHUB_OUTPUT
+          fi
+
   build-windows:
+    needs: [ setup-ruby-versions ]
     defaults:
         run:
           shell: bash
@@ -21,7 +46,7 @@ jobs:
     strategy:
       matrix:
         arch: [x86_64]
-        ruby-version: [3.2.9, 3.3.10, 3.4.7]
+        ruby-version: ${{ fromJson(needs.setup-ruby-versions.outputs.versions) }}
         os: [windows-latest]
         # include:
         #   - os: windows-11-arm
@@ -117,18 +142,23 @@ jobs:
         env:
           RUBY_VERSIONS: ${{ matrix.ruby-version }}
           ARCHITECTURES: ${{ matrix.arch }}
+          SKIP_GEMS: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.build_gems != 'true') && 'true' || 'false' }}
       - name: package ${{ matrix.arch }}
         # shell: bash
         working-directory: windows
         run: |
             ./package.sh -r traveling-ruby-${{ env.PKG_DATE }}-${{ matrix.ruby-version }}-windows-${{ matrix.arch }}.tar.gz output/${{ matrix.ruby-version }}/${{ matrix.arch }}
-            ./package.sh -E traveling-ruby-gems-${{ env.PKG_DATE }}-${{ matrix.ruby-version }}-windows-${{ matrix.arch }} output/${{ matrix.ruby-version }}/${{ matrix.arch }}
-            touch traveling-ruby-gems-${{ env.PKG_DATE }}-${{ matrix.ruby-version }}-windows-${{ matrix.arch }}/ok
-            ./package.sh -f -r traveling-ruby-${{ env.PKG_DATE }}-${{ matrix.ruby-version }}-windows-${{ matrix.arch }}-full.tar.gz output/${{ matrix.ruby-version }}/${{ matrix.arch }}
+            if [ "$BUILD_GEMS" = "true" ]; then
+              ./package.sh -E traveling-ruby-gems-${{ env.PKG_DATE }}-${{ matrix.ruby-version }}-windows-${{ matrix.arch }} output/${{ matrix.ruby-version }}/${{ matrix.arch }}
+              touch traveling-ruby-gems-${{ env.PKG_DATE }}-${{ matrix.ruby-version }}-windows-${{ matrix.arch }}/ok
+              ./package.sh -f -r traveling-ruby-${{ env.PKG_DATE }}-${{ matrix.ruby-version }}-windows-${{ matrix.arch }}-full.tar.gz output/${{ matrix.ruby-version }}/${{ matrix.arch }}
+            fi
         env:
           RUBY_VERSIONS: ${{ matrix.ruby-version }}
           ARCHITECTURES: ${{ matrix.arch }}
+          BUILD_GEMS: ${{ (github.event_name != 'workflow_dispatch' || github.event.inputs.build_gems == 'true') && 'true' || 'false' }}
       - name: test gems
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.build_gems == 'true' }}
         # shell: bash
         working-directory: windows
         run: |
@@ -137,8 +167,9 @@ jobs:
           RUBY_VERSIONS: ${{ matrix.ruby-version }}
           ARCHITECTURES: ${{ matrix.arch }}
       - name: package gems
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.build_gems == 'true' }}
         # shell: bash
-        run: ./scripts/package-gems.sh    
+        run: ./scripts/package-gems.sh
         env:
           PLATFORM: windows
       - name: "Upload Artifact - traveling-ruby-${{ env.PKG_DATE }}-${{ matrix.ruby-version }}-windows-${{ matrix.arch }}"
@@ -160,11 +191,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   test-windows-min:
-    needs: build-windows
+    needs: [ setup-ruby-versions, build-windows ]
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.build_gems == 'true' }}
     strategy:
       matrix:
         arch: [x86_64]
-        ruby-version: [3.2.9, 3.3.10, 3.4.7]
+        ruby-version: ${{ fromJson(needs.setup-ruby-versions.outputs.versions) }}
         os: [windows-latest]
         # include:
         #   - os: windows-11-arm
@@ -190,11 +222,12 @@ jobs:
           RUBY_VERSIONS: ${{ matrix.ruby-version }}
           ARCHITECTURES: ${{ matrix.arch }}
   test-windows-full:
-    needs: build-windows
+    needs: [ setup-ruby-versions, build-windows ]
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.build_gems == 'true' }}
     strategy:
       matrix:
         arch: [x86_64]
-        ruby-version: [3.4.7]
+        ruby-version: ${{ fromJson(needs.setup-ruby-versions.outputs.versions) }}
         os: [windows-latest]
         # include:
         #   - os: windows-11-arm

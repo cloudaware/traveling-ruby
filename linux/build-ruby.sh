@@ -170,5 +170,6 @@ exec docker run \
 	-e "COMPILE=$COMPILE" \
 	-e "SANITY_CHECK_OUTPUT=$SANITY_CHECK_OUTPUT" \
 	-e "DEBUG_SHELL=$DEBUG_SHELL" \
+	-e "SKIP_GEMS=$SKIP_GEMS" \
 	"$IMAGE" \
 	/system/build-ruby.sh

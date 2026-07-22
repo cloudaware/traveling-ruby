@@ -293,7 +293,9 @@ if [[ -e /system_shared/gemfiles ]]; then
 	fi
 	run /tmp/ruby/bin/gem uninstall -x rubygems-update
 	run /tmp/ruby/bin/gem install bundler -v $BUNDLER_VERSION --no-document
-	if [[ "$DEBUG_SHELL" = after ]]; then
+	if [[ "$SKIP_GEMS" = "true" ]]; then
+		echo "SKIP_GEMS=true: skipping native gem installation"
+	elif [[ "$DEBUG_SHELL" = after ]]; then
 		install_gems || true
 	else
 		install_gems

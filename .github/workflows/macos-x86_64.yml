@@ -14,6 +14,15 @@ on:
         required: false
         default: false
         type: boolean
+      ruby_version:
+        description: 'Ruby version to build (blank = all default versions)'
+        required: false
+        default: '3.3.10'
+      build_gems:
+        description: 'Also build and package native gems'
+        type: boolean
+        required: false
+        default: false
 
 env:
   PKG_DATE: 20251122
@@ -85,7 +94,9 @@ jobs:
       - name: Set Ruby versions
         id: set-versions
         run: |
-          if [[ "${GITHUB_REF}" == *preview* || "${GITHUB_HEAD_REF}" == *preview* || "${GITHUB_REF_NAME}" == *preview* ]]; then
+          if [ -n "${{ github.event.inputs.ruby_version }}" ]; then
+            echo "ruby_versions=['${{ github.event.inputs.ruby_version }}']" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF}" == *preview* || "${GITHUB_HEAD_REF}" == *preview* || "${GITHUB_REF_NAME}" == *preview* ]]; then
             echo "ruby_versions=['3.5.0-preview1','4.0.0-preview2']" >> $GITHUB_OUTPUT
           else
             echo "ruby_versions=['3.2.9','3.3.10','3.4.7']" >> $GITHUB_OUTPUT
@@ -120,11 +131,13 @@ jobs:
           cd macos
           rake stash_conflicting_paths
           rake --trace
-            rake package_full
+          if [ "$BUILD_GEMS" = "true" ]; then rake package_full; fi
           rake unstash_conflicting_paths
           ls
         env:
           RUBY_VERSIONS: ${{ matrix.ruby-version }}
+          SKIP_GEMS: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.build_gems != 'true') && 'true' || 'false' }}
+          BUILD_GEMS: ${{ (github.event_name != 'workflow_dispatch' || github.event.inputs.build_gems == 'true') && 'true' || 'false' }}
       # - name: package macos x86_64 runtime
       #   run: ./scripts/package-macos-runtime.sh
       #   env:
@@ -135,6 +148,7 @@ jobs:
       #     name: macos-runtime-x86_64-gha-openssl_1_1.tar.gz
       #     path: macos/macos-runtime-*.tar.gz
       - name: package gems
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.build_gems == 'true' }}
         run: ./scripts/package-gems.sh
       - name: "Upload Artifact- macos x86_64"
         uses: actions/upload-artifact@v5
@@ -142,6 +156,7 @@ jobs:
           name: traveling-ruby-${{ env.PKG_DATE }}-${{ matrix.ruby-version }}-macos-x86_64.tar.gz
           path: macos/traveling-ruby*.tar.gz
       - name: test
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.build_gems == 'true' }}
         run: |
           cd macos
           rake test

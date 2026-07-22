@@ -22,10 +22,27 @@ needed to ship the patched **OpenSSL 3.6.3** (fixes CVE-2026-9076 and other
 - The branch containing the OpenSSL changes must be pushed to GitHub (workflows
   run from the ref you dispatch).
 
-All the build workflows are triggered manually via `workflow_dispatch` and, by
-default, build the full version matrix `3.2.9`, `3.3.10`, `3.4.7`. You download
-the `3.3.10` artifact you care about — there is no need to narrow the matrix
-(though you can; see [Building only 3.3.10](#building-only-3310)).
+All the build workflows are triggered manually via `workflow_dispatch`. When you
+dispatch them manually they build **only Ruby 3.3.10** and **skip native gems**
+by default (see below). Automatic runs (push / release) keep the old behaviour:
+the full `3.2.9 / 3.3.10 / 3.4.7` matrix with gems.
+
+### Manual run inputs (build 3.3.10 only, no gems)
+
+The `x86_64` workflows (`ubuntu-x86_64.yml`, `win.yml`, `macos-x86_64.yml`) expose
+two `workflow_dispatch` inputs:
+
+| Input | Default | Meaning |
+|---|---|---|
+| `ruby_version` | `3.3.10` | Single Ruby version to build. Leave blank to build all default versions. |
+| `build_gems` | `false` | When `false`, only the plain Ruby binary is built — the ~50 native gems (puma, rugged, nokogiri, mysql2, pg…) are **not** compiled or packaged, and the gem test/`*-full.tar.gz` steps are skipped. Set `true` to build the full package. |
+
+So a default manual run gives you exactly one artifact per platform:
+`traveling-ruby-20251122-3.3.10-<platform>-x86_64.tar.gz` (Ruby only).
+
+How the toggle works under the hood: the input sets a `SKIP_GEMS` env var that the
+build scripts honour (`linux/internal/build-ruby.sh`, `macos/build-ruby.sh`,
+`windows/build-ruby.sh`), and gates the gem packaging/test steps in the workflows.
 
 ---
 
@@ -68,15 +85,20 @@ OpenSSL 3.6.3 (plus MySQL/PostgreSQL/ICU/libssh2) into it. No secrets required.
 ### Run it
 
 ```bash
-# x86_64 (glibc)
+# x86_64 (glibc) — Ruby 3.3.10 only, no gems (defaults)
 gh workflow run ubuntu-x86_64.yml --ref <your-branch>
 
-# arm64 (glibc)
-gh workflow run ubuntu-arm64.yml --ref <your-branch>
+# explicit form / to build gems too
+gh workflow run ubuntu-x86_64.yml --ref <your-branch> \
+  -f ruby_version=3.3.10 -f build_gems=false
 ```
 
 Or use the **Actions** tab → select the workflow → **Run workflow** → pick your
-branch.
+branch and inputs.
+
+> `ubuntu-arm64.yml` builds arm64 but has **not** been wired with the
+> `ruby_version` / `build_gems` inputs yet — it still builds the full matrix with
+> gems. Ask if you want arm64 (and musl) wired the same way.
 
 ### Expected runtime
 
@@ -112,7 +134,12 @@ No changes needed to run — the fix is self-contained in the workflow:
 ### Run it
 
 ```bash
+# Ruby 3.3.10 only, no gems (defaults)
 gh workflow run win.yml --ref <your-branch>
+
+# explicit / with gems
+gh workflow run win.yml --ref <your-branch> \
+  -f ruby_version=3.3.10 -f build_gems=false
 ```
 
 ### Notes
@@ -143,9 +170,11 @@ actually ship OpenSSL 3.6.3 on macOS you must:
 1. **Rebuild the runtime** with the clear-cache input, which compiles OpenSSL
    3.6.3 and uploads a `macos-runtime-<arch>-gha.tar.gz` artifact:
    ```bash
-   gh workflow run macos-x86_64.yml --ref <your-branch> -f clear_cache=true
-   gh workflow run macos-arm64.yml  --ref <your-branch> -f clear_cache=true
+   gh workflow run macos-x86_64.yml --ref <your-branch> \
+     -f clear_cache=true -f ruby_version=3.3.10 -f build_gems=false
    ```
+   (`macos-arm64.yml` is not yet wired with the `ruby_version`/`build_gems`
+   inputs.)
 2. **Publish the new runtime tarball** to a release/location you control (e.g. a
    release on this fork), and **update the URL** in
    `scripts/download-macos-runtime.sh` to point at it.
@@ -173,18 +202,11 @@ Or download from the run's summary page in the **Actions** tab.
 
 ---
 
-## Building only 3.3.10
+## Building a different version / all versions
 
-By default the matrix builds `3.2.9`, `3.3.10`, `3.4.7` in parallel and you just
-grab the 3.3.10 artifact. To build *only* 3.3.10 (faster, fewer runner minutes),
-edit the `setup-ruby-versions` step in the relevant workflow:
-
-```yaml
-echo "ruby_versions=['3.3.10']" >> $GITHUB_OUTPUT
-```
-
-(Applies to `ubuntu-x86_64.yml`, `ubuntu-arm64.yml`, `macos-*.yml`; `win.yml`
-lists versions directly in its `matrix.ruby-version`.)
+Manual runs default to `ruby_version=3.3.10`. To build a different single version,
+pass `-f ruby_version=3.4.7`. To build the full default matrix in a manual run,
+pass an empty value: `-f ruby_version=`.
 
 ---
 
@@ -209,10 +231,12 @@ have the build pull it instead:
 
 ## Quick reference
 
+All manual runs below build **Ruby 3.3.10 only, no gems** by default.
+
 | Platform | Command | OpenSSL 3.6.3 works out of the box? |
 |---|---|---|
 | Linux x86_64 | `gh workflow run ubuntu-x86_64.yml --ref <branch>` | ✅ (inline image build) |
-| Linux arm64  | `gh workflow run ubuntu-arm64.yml --ref <branch>`  | ✅ (inline image build) |
-| Linux musl   | `gh workflow run alpine-x86_64.yml --ref <branch>` | ⚠️ tag mismatch to fix first |
 | Windows x86_64 | `gh workflow run win.yml --ref <branch>` | ✅ |
-| macOS | `gh workflow run macos-x86_64.yml --ref <branch> -f clear_cache=true` + re-point runtime | ⚠️ multi-step |
+| macOS x86_64 | `gh workflow run macos-x86_64.yml --ref <branch> -f clear_cache=true` + re-point runtime | ⚠️ multi-step |
+| Linux arm64  | `gh workflow run ubuntu-arm64.yml --ref <branch>`  | ✅ build, but ⚠️ not wired for version/gems inputs |
+| Linux musl   | `gh workflow run alpine-x86_64.yml --ref <branch>` | ⚠️ tag mismatch + not wired |

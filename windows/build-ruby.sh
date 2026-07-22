@@ -216,6 +216,11 @@ fi
 
 echo $GEMFILE
 
+if [[ "$SKIP_GEMS" == "true" ]]; then
+	echo "SKIP_GEMS=true: skipping gem installation"
+	GEMFILE=
+fi
+
 if [[ "$GEMFILE" != "" ]]; then
 	# Restore cached gems.
 	if [[ -e "$CACHE_DIR/vendor" ]]; then

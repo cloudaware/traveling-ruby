@@ -204,6 +204,10 @@ else
 	WORKDIR="`cd \"$WORKDIR\" && pwd`"
 fi
 TMPBUILDROOT="$WORKDIR/inst"
+if [[ "$SKIP_GEMS" == "true" ]]; then
+	echo "SKIP_GEMS=true: skipping gem installation"
+	GEMFILE=
+fi
 if [[ "$GEMFILE" != "" ]]; then
 	GEMFILE="`absolute_path \"$GEMFILE\"`"
 	if [[ -d "$GEMFILE" ]]; then
