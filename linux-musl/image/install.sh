@@ -41,6 +41,11 @@ if ! /hbb_shlib/bin/openssl version 2>/dev/null | grep -q "$OPENSSL_VERSION"; th
 	(
 		source /hbb_shlib/activate
 		unset LDFLAGS
+		# -fvisibility=hidden (from the HBB activate CFLAGS) hides libcrypto's
+		# symbols and breaks linking of OpenSSL's own engines/providers, so
+		# strip it the same way the Ruby build does.
+		export CFLAGS="${CFLAGS//-fvisibility=hidden/}"
+		export CXXFLAGS="${CXXFLAGS//-fvisibility=hidden/}"
 		run ./config --prefix=/hbb_shlib --openssldir=/hbb_shlib/ssl \
 			shared no-tests
 		run make -j$MAKE_CONCURRENCY
