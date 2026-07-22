@@ -46,10 +46,16 @@ if ! /hbb_shlib/bin/openssl version 2>/dev/null | grep -q "$OPENSSL_VERSION"; th
 		# strip it the same way the Ruby build does.
 		export CFLAGS="${CFLAGS//-fvisibility=hidden/}"
 		export CXXFLAGS="${CXXFLAGS//-fvisibility=hidden/}"
+		# Static-only: Traveling Ruby links OpenSSL statically into the
+		# extensions (the sanity check rejects any non-system shared deps).
 		run ./config --prefix=/hbb_shlib --openssldir=/hbb_shlib/ssl \
-			shared no-tests
+			no-shared no-tests
 		run make -j$MAKE_CONCURRENCY
 		run make install_sw
+		# Drop the base image's shared OpenSSL (3.6.0) so Ruby links our
+		# static 3.6.3 libs — linkers prefer .so over .a when both exist.
+		run rm -f /hbb_shlib/lib/libssl.so* /hbb_shlib/lib/libcrypto.so* \
+			/hbb_shlib/lib64/libssl.so* /hbb_shlib/lib64/libcrypto.so*
 	)
 	if [[ "$?" != 0 ]]; then false; fi
 
