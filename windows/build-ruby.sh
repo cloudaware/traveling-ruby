@@ -250,6 +250,27 @@ if [[ "$GEMFILE" != "" ]]; then
 		run "$OUTPUT_DIR/bin/gem" install bundler -v $BUNDLER_VERSION --no-document
 	fi
 
+	# Rebuild the openssl extension against the updated OpenSSL (3.6.3) so the
+	# compile-time OpenSSL::OPENSSL_VERSION reflects the patched version (not the
+	# one RubyInstaller was built against). The rebuilt openssl.so overwrites the
+	# default-gem copy under lib/ruby/<ver>/<arch>/ so it survives package.sh -r.
+	if [[ "$ARCHITECTURE" == "x86_64" ]]; then
+		header "Rebuilding openssl extension against /ucrt64 OpenSSL"
+		OSSL_GEMSPEC=`ls "$OUTPUT_DIR"/lib/ruby/gems/$RUBY_COMPAT_VERSION/specifications/default/openssl-*.gemspec | head -1`
+		OSSL_VER=`basename "$OSSL_GEMSPEC" .gemspec | sed 's/^openssl-//'`
+		echo "Default openssl gem version: $OSSL_VER"
+		run "$OUTPUT_DIR/bin/gem" install openssl -v "$OSSL_VER" --no-document -- --with-openssl-dir=/ucrt64
+		NEW_OSSL_SO=`find "$OUTPUT_DIR/lib/ruby/gems/$RUBY_COMPAT_VERSION" -path "*openssl-$OSSL_VER*" -name openssl.so | head -1`
+		if [[ -z "$NEW_OSSL_SO" ]]; then
+			echo "ERROR: rebuilt openssl.so not found"; exit 1
+		fi
+		echo "Rebuilt openssl.so: $NEW_OSSL_SO"
+		run cp "$NEW_OSSL_SO" "$OUTPUT_DIR/lib/ruby/$RUBY_COMPAT_VERSION/$RUBY_ARCH/openssl.so"
+		run "$OUTPUT_DIR/bin/gem" uninstall openssl -v "$OSSL_VER" -x --force --executables || true
+		echo "Verifying OpenSSL versions in rebuilt extension:"
+		run "$OUTPUT_DIR/bin/ruby" -ropenssl -e 'puts OpenSSL::OPENSSL_VERSION; puts OpenSSL::OPENSSL_LIBRARY_VERSION'
+	fi
+
 	# Run bundle install for each Gemfile (skipped when SKIP_GEMS=true).
 	for GEMFILE in "${GEMFILES[@]}"; do
 		if [[ "$SKIP_GEMS" == "true" ]]; then
