@@ -395,6 +395,17 @@ if [[ -n "$BIN_DIR" ]]; then
 			run cp "$BIN_DIR/$DLL" "bin.real/"
 		fi
 	done
+	# RubyInstaller loads its bundled runtime DLLs from bin.real/ruby_builtin_dlls
+	# (ruby.exe registers it via AddDllDirectory), so openssl.so actually loads
+	# libssl/libcrypto from there. Overwrite those copies with the updated ones
+	# too, otherwise OpenSSL::OPENSSL_LIBRARY_VERSION stays at the stale version.
+	if [[ -d "bin.real/ruby_builtin_dlls" ]]; then
+		for DLL in libcrypto-3-x64.dll libssl-3-x64.dll; do
+			if [[ -f "$BIN_DIR/$DLL" ]]; then
+				run cp "$BIN_DIR/$DLL" "bin.real/ruby_builtin_dlls/"
+			fi
+		done
+	fi
 fi
 
 # create an arch specific lib folder for pg gem, despite us placing it in bin.real
