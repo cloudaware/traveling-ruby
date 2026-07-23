@@ -133,6 +133,14 @@ jobs:
       #     ./output/${{ matrix.ruby-version }}/${{ matrix.arch }}/bin/ridk.cmd exec sh -c "pacman -Syu --noconfirm"
       #     ./output/${{ matrix.ruby-version }}/${{ matrix.arch }}/bin/ridk.cmd exec sh -c "pacman -S --noconfirm make gcc mingw-w64-clang-aarch64-clang"
 
+      - name: Update MSYS2 OpenSSL to latest (3.6.3+)
+        shell: bash
+        run: |
+            if command -v pacman >/dev/null 2>&1; then PAC="pacman"; else PAC="ridk exec pacman"; fi
+            echo "Using: $PAC"
+            $PAC -Sy --noconfirm
+            $PAC -S --noconfirm --needed mingw-w64-ucrt-x86_64-openssl
+            /ucrt64/bin/openssl.exe version
       - name: build ruby ${{ matrix.ruby-version }} ${{ matrix.arch }}
         working-directory: windows
         run: |
