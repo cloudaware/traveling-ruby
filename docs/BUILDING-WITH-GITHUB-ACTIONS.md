@@ -24,7 +24,7 @@ gh run download <run-id> -D ./artifacts   # -> traveling-ruby-<date>-3.3.10-<pla
 ## Inputs (manual runs)
 
 | Input | Default | Effect |
-|---|---|---|
+| --- | --- | --- |
 | `ruby_version` | `3.3.10` | Single version to build. Blank = full default matrix (`3.2.9 3.3.10 3.4.7`). |
 | `build_gems` | `false` | `false` = plain Ruby only (skips compiling/packaging the ~50 native gems, and gem tests). `true` = full package. |
 
@@ -40,6 +40,7 @@ Push/release runs are unchanged: full matrix, with gems.
 ruby -ropenssl -e 'puts OpenSSL::OPENSSL_VERSION'          # compile-time
 ruby -ropenssl -e 'puts OpenSSL::OPENSSL_LIBRARY_VERSION'  # runtime DLL/lib
 ```
+
 Both should report `3.6.3`.
 
 ## How OpenSSL 3.6.3 gets in (per platform)
