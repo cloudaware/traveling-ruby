@@ -268,7 +268,20 @@ if [[ "$GEMFILE" != "" ]]; then
 		# Build with the MSYS2 this script runs in, which has the toolchain that
 		# built $OPENSSL_DIR. RubyInstaller otherwise takes the devkit from
 		# RI_DEVKIT, which setup-ruby-pkgs points at its own minimal copy.
-		RI_DEVKIT="`cygpath -w /`" run "$OUTPUT_DIR/bin/gem" install openssl -v "$OSSL_VER" --no-document -- --with-openssl-dir="$OPENSSL_DIR"
+		if ! RI_DEVKIT="`cygpath -w /`" run "$OUTPUT_DIR/bin/gem" install openssl -v "$OSSL_VER" --no-document -- --with-openssl-dir="$OPENSSL_DIR"; then
+			OSSL_EXT_DIR=`ls -d "$OUTPUT_DIR"/lib/ruby/gems/$RUBY_COMPAT_VERSION/gems/openssl-$OSSL_VER/ext/openssl | head -1`
+			echo "=== diagnostics: openssl extension rebuild failed"
+			echo "RI_DEVKIT=`cygpath -w /` (outer: $RI_DEVKIT) MAKE=$MAKE"
+			echo "which make sh: `which make` `which sh`"; make --version | head -1
+			echo "--- gem_make.out"
+			cat "$OUTPUT_DIR"/lib/ruby/gems/$RUBY_COMPAT_VERSION/extensions/*/*/openssl-$OSSL_VER/gem_make.out || true
+			echo "--- Makefile (shell, ruby and tool variables)"
+			grep -nE '^(SHELL|ruby|RUBY|RUBY_BASE_NAME|RUBY_INSTALL_NAME|bindir|prefix|RM|ECHO|Q|MAKEDIRS|INSTALL) *=' "$OSSL_EXT_DIR/Makefile" || true
+			sed -n '170,200p;262,275p' "$OSSL_EXT_DIR/Makefile" || true
+			echo "--- running the Makefile's ruby from make"
+			(cd "$OSSL_EXT_DIR" && printf 'include Makefile\ndiag:\n\t-@echo "RUBY=$(RUBY)"\n\t-$(RUBY) -v\n\t-ls -la $(bindir)\n' > diag.mk && make -f diag.mk diag) || true
+			exit 1
+		fi
 		NEW_OSSL_SO=`find "$OUTPUT_DIR/lib/ruby/gems/$RUBY_COMPAT_VERSION" -path "*openssl-$OSSL_VER*" -name openssl.so | head -1`
 		if [[ -z "$NEW_OSSL_SO" ]]; then
 			echo "ERROR: rebuilt openssl.so not found"; exit 1
