@@ -268,11 +268,15 @@ if [[ "$GEMFILE" != "" ]]; then
 		# Build with the MSYS2 this script runs in, which has the toolchain that
 		# built $OPENSSL_DIR. RubyInstaller otherwise takes the devkit from
 		# RI_DEVKIT, which setup-ruby-pkgs points at its own minimal copy.
-		if ! RI_DEVKIT="`cygpath -w /`" run "$OUTPUT_DIR/bin/gem" install openssl -v "$OSSL_VER" --no-document -- --with-openssl-dir="$OPENSSL_DIR"; then
+		# mkmf writes the Ruby prefix as /<drive letter>/..., keeping its case
+		# (/D/a/... on GitHub runners), and an MSYS2 with case-sensitive mounts
+		# cannot run $(RUBY) from there. Pass the prefix as MSYS2 spells it.
+		if ! RI_DEVKIT="`cygpath -w /`" MAKEFLAGS="prefix=`cygpath -u "$OUTPUT_DIR"`" run "$OUTPUT_DIR/bin/gem" install openssl -v "$OSSL_VER" --no-document -- --with-openssl-dir="$OPENSSL_DIR"; then
 			OSSL_EXT_DIR=`ls -d "$OUTPUT_DIR"/lib/ruby/gems/$RUBY_COMPAT_VERSION/gems/openssl-$OSSL_VER/ext/openssl | head -1`
 			echo "=== diagnostics: openssl extension rebuild failed"
 			echo "RI_DEVKIT=`cygpath -w /` (outer: $RI_DEVKIT) MAKE=$MAKE"
 			echo "which make sh: `which make` `which sh`"; make --version | head -1
+			echo "prefix: `cygpath -u "$OUTPUT_DIR"`"; ls -d "/`cygpath -w "$OUTPUT_DIR" | cut -c1`" 2>&1; mount
 			echo "--- gem_make.out"
 			cat "$OUTPUT_DIR"/lib/ruby/gems/$RUBY_COMPAT_VERSION/extensions/*/*/openssl-$OSSL_VER/gem_make.out || true
 			echo "--- Makefile (shell, ruby and tool variables)"
