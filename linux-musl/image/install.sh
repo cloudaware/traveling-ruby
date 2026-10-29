@@ -3,7 +3,7 @@ set -e
 # shellcheck source=linux/image/functions.sh
 source /tr_build/functions.sh
 
-OPENSSL_VERSION=3.6.3
+OPENSSL_VERSION=3.5.9
 MYSQL_LIB_VERSION=6.1.9
 POSTGRESQL_VERSION=15.14
 ICU_RELEASE_VERSION=78.1
@@ -52,8 +52,8 @@ if ! /hbb_shlib/bin/openssl version 2>/dev/null | grep -q "$OPENSSL_VERSION"; th
 			no-shared no-tests
 		run make -j$MAKE_CONCURRENCY
 		run make install_sw
-		# Drop the base image's shared OpenSSL (3.6.0) so Ruby links our
-		# static 3.6.3 libs — linkers prefer .so over .a when both exist.
+		# Drop the base image's shared OpenSSL so Ruby links our
+		# static $OPENSSL_VERSION libs — linkers prefer .so over .a when both exist.
 		run rm -f /hbb_shlib/lib/libssl.so* /hbb_shlib/lib/libcrypto.so* \
 			/hbb_shlib/lib64/libssl.so* /hbb_shlib/lib64/libcrypto.so*
 	)
