@@ -265,7 +265,10 @@ if [[ "$GEMFILE" != "" ]]; then
 		OSSL_GEMSPEC=`ls "$OUTPUT_DIR"/lib/ruby/gems/$RUBY_COMPAT_VERSION/specifications/default/openssl-*.gemspec | head -1`
 		OSSL_VER=`basename "$OSSL_GEMSPEC" .gemspec | sed 's/^openssl-//'`
 		echo "Default openssl gem version: $OSSL_VER"
-		run "$OUTPUT_DIR/bin/gem" install openssl -v "$OSSL_VER" --no-document -- --with-openssl-dir="$OPENSSL_DIR"
+		# Build with the MSYS2 this script runs in, which has the toolchain that
+		# built $OPENSSL_DIR. RubyInstaller otherwise takes the devkit from
+		# RI_DEVKIT, which setup-ruby-pkgs points at its own minimal copy.
+		RI_DEVKIT="`cygpath -w /`" run "$OUTPUT_DIR/bin/gem" install openssl -v "$OSSL_VER" --no-document -- --with-openssl-dir="$OPENSSL_DIR"
 		NEW_OSSL_SO=`find "$OUTPUT_DIR/lib/ruby/gems/$RUBY_COMPAT_VERSION" -path "*openssl-$OSSL_VER*" -name openssl.so | head -1`
 		if [[ -z "$NEW_OSSL_SO" ]]; then
 			echo "ERROR: rebuilt openssl.so not found"; exit 1
@@ -426,7 +429,7 @@ if [[ -n "$BIN_DIR" ]]; then
 fi
 
 echo "OpenSSL in the packaged Ruby:"
-OSSL_REPORTED=`bin.real/ruby.exe -ropenssl -e 'puts OpenSSL::OPENSSL_VERSION; puts OpenSSL::OPENSSL_LIBRARY_VERSION'`
+OSSL_REPORTED=`bin/ruby.bat -ropenssl -e 'puts OpenSSL::OPENSSL_VERSION; puts OpenSSL::OPENSSL_LIBRARY_VERSION'`
 echo "$OSSL_REPORTED"
 if [[ -n "$OPENSSL_EXPECTED_VERSION" ]]; then
 	if [[ `echo "$OSSL_REPORTED" | grep -c "OpenSSL $OPENSSL_EXPECTED_VERSION "` != 2 ]]; then

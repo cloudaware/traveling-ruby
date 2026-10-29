@@ -12,7 +12,9 @@ OPENSSL_VERSION=
 PREFIX=
 # Compiled-in OPENSSLDIR, where OpenSSL looks for openssl.cnf at runtime. It
 # must not be writable by unprivileged users: the agent runs as SYSTEM, and a
-# planted openssl.cnf can load arbitrary modules into it.
+# planted openssl.cnf can load arbitrary modules into it. The build also uses
+# no-dso, so nothing is ever loaded from the compiled-in ENGINESDIR and
+# MODULESDIR, which point into the build machine's MSYS2.
 OPENSSLDIR="C:/Program Files/Cloudaware/Breeze/etc/ssl"
 
 function usage()
@@ -83,7 +85,7 @@ run tar xzf "openssl-$OPENSSL_VERSION.tar.gz"
 
 header "Building openssl-$OPENSSL_VERSION"
 cd "openssl-$OPENSSL_VERSION"
-run perl Configure mingw64 shared no-tests no-docs \
+run perl Configure mingw64 shared no-dso no-tests no-docs \
 	--prefix="$PREFIX" --libdir=lib --openssldir="$OPENSSLDIR"
 run make -j`nproc`
 run make install_sw
