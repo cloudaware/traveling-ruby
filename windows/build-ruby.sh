@@ -20,6 +20,12 @@ RUBY_VERSION=${RUBY_VERSIONS[$LAST_RUBY_VERSION_INDEX]}
 #     BUNDLER_VERSION="2.4.22"
 # fi
 RELEASE_NUM=1
+# OpenSSL to link the openssl extension against and ship as libssl/libcrypto.
+# Defaults to the MSYS2 package; set OPENSSL_DIR to a build from
+# build-openssl.sh to pin a version, and OPENSSL_EXPECTED_VERSION to fail the
+# build unless the packaged Ruby reports it.
+OPENSSL_DIR=${OPENSSL_DIR:-/ucrt64}
+OPENSSL_EXPECTED_VERSION=${OPENSSL_EXPECTED_VERSION:-}
 
 function usage()
 {
@@ -250,16 +256,16 @@ if [[ "$GEMFILE" != "" ]]; then
 		run "$OUTPUT_DIR/bin/gem" install bundler -v $BUNDLER_VERSION --no-document
 	fi
 
-	# Rebuild the openssl extension against the updated OpenSSL (3.6.3) so the
+	# Rebuild the openssl extension against $OPENSSL_DIR so the
 	# compile-time OpenSSL::OPENSSL_VERSION reflects the patched version (not the
 	# one RubyInstaller was built against). The rebuilt openssl.so overwrites the
 	# default-gem copy under lib/ruby/<ver>/<arch>/ so it survives package.sh -r.
 	if [[ "$ARCHITECTURE" == "x86_64" ]]; then
-		header "Rebuilding openssl extension against /ucrt64 OpenSSL"
+		header "Rebuilding openssl extension against $OPENSSL_DIR OpenSSL"
 		OSSL_GEMSPEC=`ls "$OUTPUT_DIR"/lib/ruby/gems/$RUBY_COMPAT_VERSION/specifications/default/openssl-*.gemspec | head -1`
 		OSSL_VER=`basename "$OSSL_GEMSPEC" .gemspec | sed 's/^openssl-//'`
 		echo "Default openssl gem version: $OSSL_VER"
-		run "$OUTPUT_DIR/bin/gem" install openssl -v "$OSSL_VER" --no-document -- --with-openssl-dir=/ucrt64
+		run "$OUTPUT_DIR/bin/gem" install openssl -v "$OSSL_VER" --no-document -- --with-openssl-dir="$OPENSSL_DIR"
 		NEW_OSSL_SO=`find "$OUTPUT_DIR/lib/ruby/gems/$RUBY_COMPAT_VERSION" -path "*openssl-$OSSL_VER*" -name openssl.so | head -1`
 		if [[ -z "$NEW_OSSL_SO" ]]; then
 			echo "ERROR: rebuilt openssl.so not found"; exit 1
@@ -395,16 +401,37 @@ if [[ -n "$BIN_DIR" ]]; then
 			run cp "$BIN_DIR/$DLL" "bin.real/"
 		fi
 	done
+	# libssl/libcrypto come from $OPENSSL_DIR, which is not $BIN_DIR when the
+	# OpenSSL version is pinned.
+	OPENSSL_BIN_DIR="$BIN_DIR"
+	if [[ "$RUBY_ARCH" == "x64"* ]]; then
+		OPENSSL_BIN_DIR="$OPENSSL_DIR/bin"
+	fi
+	for DLL in libcrypto-3-x64.dll libssl-3-x64.dll; do
+		if [[ -f "$OPENSSL_BIN_DIR/$DLL" ]]; then
+			run cp "$OPENSSL_BIN_DIR/$DLL" "bin.real/"
+		fi
+	done
 	# RubyInstaller loads its bundled runtime DLLs from bin.real/ruby_builtin_dlls
 	# (ruby.exe registers it via AddDllDirectory), so openssl.so actually loads
 	# libssl/libcrypto from there. Overwrite those copies with the updated ones
 	# too, otherwise OpenSSL::OPENSSL_LIBRARY_VERSION stays at the stale version.
 	if [[ -d "bin.real/ruby_builtin_dlls" ]]; then
 		for DLL in libcrypto-3-x64.dll libssl-3-x64.dll; do
-			if [[ -f "$BIN_DIR/$DLL" ]]; then
-				run cp "$BIN_DIR/$DLL" "bin.real/ruby_builtin_dlls/"
+			if [[ -f "$OPENSSL_BIN_DIR/$DLL" ]]; then
+				run cp "$OPENSSL_BIN_DIR/$DLL" "bin.real/ruby_builtin_dlls/"
 			fi
 		done
+	fi
+fi
+
+echo "OpenSSL in the packaged Ruby:"
+OSSL_REPORTED=`bin.real/ruby.exe -ropenssl -e 'puts OpenSSL::OPENSSL_VERSION; puts OpenSSL::OPENSSL_LIBRARY_VERSION'`
+echo "$OSSL_REPORTED"
+if [[ -n "$OPENSSL_EXPECTED_VERSION" ]]; then
+	if [[ `echo "$OSSL_REPORTED" | grep -c "OpenSSL $OPENSSL_EXPECTED_VERSION "` != 2 ]]; then
+		echo "ERROR: expected OpenSSL $OPENSSL_EXPECTED_VERSION for both the compile-time and the loaded library"
+		exit 1
 	fi
 fi
 

@@ -5,7 +5,7 @@ on:
       ruby_version:
         description: 'Ruby version to build (blank = all default versions)'
         required: false
-        default: '3.3.10'
+        default: '3.3.13'
       build_gems:
         description: 'Also build and package native gems'
         type: boolean
@@ -20,6 +20,8 @@ on:
 
 env:
   PKG_DATE: 20251122
+  # MSYS2 only ships the latest OpenSSL, so the pinned LTS is built from source.
+  OPENSSL_VERSION: 3.5.9
 
 jobs:
   setup-ruby-versions:
@@ -33,7 +35,7 @@ jobs:
           if [ -n "${{ github.event.inputs.ruby_version }}" ]; then
             echo "ruby_versions=['${{ github.event.inputs.ruby_version }}']" >> $GITHUB_OUTPUT
           else
-            echo "ruby_versions=['3.2.9','3.3.10','3.4.7']" >> $GITHUB_OUTPUT
+            echo "ruby_versions=['3.2.9','3.3.13','3.4.7']" >> $GITHUB_OUTPUT
           fi
 
   build-windows:
@@ -133,7 +135,7 @@ jobs:
       #     ./output/${{ matrix.ruby-version }}/${{ matrix.arch }}/bin/ridk.cmd exec sh -c "pacman -Syu --noconfirm"
       #     ./output/${{ matrix.ruby-version }}/${{ matrix.arch }}/bin/ridk.cmd exec sh -c "pacman -S --noconfirm make gcc mingw-w64-clang-aarch64-clang"
 
-      - name: Update MSYS2 OpenSSL to latest (3.6.3+)
+      - name: Update MSYS2 OpenSSL packages
         shell: bash
         run: |
             if command -v pacman >/dev/null 2>&1; then PAC="pacman"; else PAC="ridk exec pacman"; fi
@@ -141,6 +143,9 @@ jobs:
             $PAC -Sy --noconfirm
             $PAC -S --noconfirm --needed mingw-w64-ucrt-x86_64-openssl
             /ucrt64/bin/openssl.exe version
+      - name: Build OpenSSL ${{ env.OPENSSL_VERSION }}
+        working-directory: windows
+        run: ./build-openssl.sh ${{ env.OPENSSL_VERSION }} /opt/openssl-${{ env.OPENSSL_VERSION }}
       - name: build ruby ${{ matrix.ruby-version }} ${{ matrix.arch }}
         working-directory: windows
         run: |
@@ -151,6 +156,8 @@ jobs:
           RUBY_VERSIONS: ${{ matrix.ruby-version }}
           ARCHITECTURES: ${{ matrix.arch }}
           SKIP_GEMS: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.build_gems != 'true') && 'true' || 'false' }}
+          OPENSSL_DIR: /opt/openssl-${{ env.OPENSSL_VERSION }}
+          OPENSSL_EXPECTED_VERSION: ${{ env.OPENSSL_VERSION }}
       - name: package ${{ matrix.arch }}
         # shell: bash
         working-directory: windows
