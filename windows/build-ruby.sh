@@ -260,39 +260,28 @@ if [[ "$GEMFILE" != "" ]]; then
 	# compile-time OpenSSL::OPENSSL_VERSION reflects the patched version (not the
 	# one RubyInstaller was built against). The rebuilt openssl.so overwrites the
 	# default-gem copy under lib/ruby/<ver>/<arch>/ so it survives package.sh -r.
+	# extconf.rb and make run from this shell rather than through gem install:
+	# on GitHub runners the make that gem install spawns gets an environment in
+	# which its commands fail with exit 127.
 	if [[ "$ARCHITECTURE" == "x86_64" ]]; then
 		header "Rebuilding openssl extension against $OPENSSL_DIR OpenSSL"
 		OSSL_GEMSPEC=`ls "$OUTPUT_DIR"/lib/ruby/gems/$RUBY_COMPAT_VERSION/specifications/default/openssl-*.gemspec | head -1`
 		OSSL_VER=`basename "$OSSL_GEMSPEC" .gemspec | sed 's/^openssl-//'`
 		echo "Default openssl gem version: $OSSL_VER"
-		# Build with the MSYS2 this script runs in, which has the toolchain that
-		# built $OPENSSL_DIR. RubyInstaller otherwise takes the devkit from
-		# RI_DEVKIT, which setup-ruby-pkgs points at its own minimal copy.
-		# mkmf writes the Ruby prefix as /<drive letter>/..., keeping its case
-		# (/D/a/... on GitHub runners), and an MSYS2 with case-sensitive mounts
-		# cannot run $(RUBY) from there. Pass the prefix as MSYS2 spells it.
-		if ! RI_DEVKIT="`cygpath -w /`" MAKEFLAGS="prefix=`cygpath -u "$OUTPUT_DIR"`" run "$OUTPUT_DIR/bin/gem" install openssl -v "$OSSL_VER" --no-document -- --with-openssl-dir="$OPENSSL_DIR"; then
-			OSSL_EXT_DIR=`ls -d "$OUTPUT_DIR"/lib/ruby/gems/$RUBY_COMPAT_VERSION/gems/openssl-$OSSL_VER/ext/openssl | head -1`
-			echo "=== diagnostics: openssl extension rebuild failed"
-			echo "RI_DEVKIT=`cygpath -w /` (outer: $RI_DEVKIT) MAKE=$MAKE"
-			echo "which make sh: `which make` `which sh`"; make --version | head -1
-			echo "prefix: `cygpath -u "$OUTPUT_DIR"`"; ls -d "/`cygpath -w "$OUTPUT_DIR" | cut -c1`" 2>&1; mount
-			echo "--- gem_make.out"
-			cat "$OUTPUT_DIR"/lib/ruby/gems/$RUBY_COMPAT_VERSION/extensions/*/*/openssl-$OSSL_VER/gem_make.out || true
-			echo "--- Makefile (shell, ruby and tool variables)"
-			grep -nE '^(SHELL|ruby|RUBY|RUBY_BASE_NAME|RUBY_INSTALL_NAME|bindir|prefix|RM|ECHO|Q|MAKEDIRS|INSTALL) *=' "$OSSL_EXT_DIR/Makefile" || true
-			sed -n '170,200p;262,275p' "$OSSL_EXT_DIR/Makefile" || true
-			echo "--- running the Makefile's ruby from make"
-			(cd "$OSSL_EXT_DIR" && printf 'include Makefile\ndiag:\n\t-@echo "RUBY=$(RUBY)"\n\t-$(RUBY) -v\n\t-ls -la $(bindir)\n' > diag.mk && make -f diag.mk diag) || true
-			exit 1
-		fi
-		NEW_OSSL_SO=`find "$OUTPUT_DIR/lib/ruby/gems/$RUBY_COMPAT_VERSION" -path "*openssl-$OSSL_VER*" -name openssl.so | head -1`
-		if [[ -z "$NEW_OSSL_SO" ]]; then
-			echo "ERROR: rebuilt openssl.so not found"; exit 1
-		fi
-		echo "Rebuilt openssl.so: $NEW_OSSL_SO"
-		run cp "$NEW_OSSL_SO" "$OUTPUT_DIR/lib/ruby/$RUBY_COMPAT_VERSION/$RUBY_ARCH/openssl.so"
-		run "$OUTPUT_DIR/bin/gem" uninstall openssl -v "$OSSL_VER" -x --force --executables || true
+		OSSL_BUILD_DIR=`mktemp -d`
+		(
+			cd "$OSSL_BUILD_DIR"
+			run "$OUTPUT_DIR/bin/gem" fetch openssl -v "$OSSL_VER"
+			run "$OUTPUT_DIR/bin/gem" unpack "openssl-$OSSL_VER.gem"
+			cd "openssl-$OSSL_VER/ext/openssl"
+			if ! run "$OUTPUT_DIR/bin/ruby" extconf.rb --with-openssl-dir="`cygpath -m "$OPENSSL_DIR"`" || ! run make -j`nproc`; then
+				echo "--- mkmf.log"
+				tail -50 mkmf.log || true
+				exit 1
+			fi
+			run cp openssl.so "$OUTPUT_DIR/lib/ruby/$RUBY_COMPAT_VERSION/$RUBY_ARCH/openssl.so"
+		)
+		run rm -rf "$OSSL_BUILD_DIR"
 		echo "Verifying OpenSSL versions in rebuilt extension:"
 		run "$OUTPUT_DIR/bin/ruby" -ropenssl -e 'puts OpenSSL::OPENSSL_VERSION; puts OpenSSL::OPENSSL_LIBRARY_VERSION'
 	fi
