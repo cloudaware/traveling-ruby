@@ -172,6 +172,9 @@ jobs:
             curl --fail -sSL -o ruby-src.tar.gz "https://cache.ruby-lang.org/pub/ruby/${V%.*}/ruby-$V.tar.gz"
             tar xzf ruby-src.tar.gz "ruby-$V/tool" "ruby-$V/test/runner.rb" "ruby-$V/test/lib" "ruby-$V/test/zlib"
             output/$V/${{ matrix.arch }}/bin/ruby.bat -rzlib -e 'puts "zlib #{Zlib.zlib_version}"'
+            # Tests that start a child Ruby look for RbConfig.ruby, bin/ruby.exe,
+            # which the package moves to bin.real/ behind the bin/*.bat wrappers.
+            export RUBY="$(cygpath -m "$PWD/output/$V/${{ matrix.arch }}/bin.real/ruby.exe")"
             output/$V/${{ matrix.arch }}/bin/ruby.bat "ruby-$V/test/runner.rb" -v zlib
             rm -rf ruby-src.tar.gz "ruby-$V"
       - name: package ${{ matrix.arch }}
