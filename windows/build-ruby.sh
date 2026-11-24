@@ -282,6 +282,16 @@ if [[ "$GEMFILE" != "" ]]; then
 			run cp openssl.so "$OUTPUT_DIR/lib/ruby/$RUBY_COMPAT_VERSION/$RUBY_ARCH/openssl.so"
 		)
 		run rm -rf "$OSSL_BUILD_DIR"
+		# The rebuilt openssl.so links libcrypto-3-x64.dll and libssl-3-x64.dll.
+		# RubyInstaller 3.3.14 ships only OpenSSL 4's, so put ours where Ruby
+		# loads DLLs from before loading it (126 otherwise). The postprocessing
+		# below copies them again into bin.real/.
+		for DLL in libcrypto-3-x64.dll libssl-3-x64.dll; do
+			run cp "$OPENSSL_DIR/bin/$DLL" "$OUTPUT_DIR/bin/"
+			if [[ -d "$OUTPUT_DIR/bin/ruby_builtin_dlls" ]]; then
+				run cp "$OPENSSL_DIR/bin/$DLL" "$OUTPUT_DIR/bin/ruby_builtin_dlls/"
+			fi
+		done
 		echo "Verifying OpenSSL versions in rebuilt extension:"
 		run "$OUTPUT_DIR/bin/ruby" -ropenssl -e 'puts OpenSSL::OPENSSL_VERSION; puts OpenSSL::OPENSSL_LIBRARY_VERSION'
 	fi
