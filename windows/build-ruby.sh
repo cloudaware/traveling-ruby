@@ -415,11 +415,19 @@ else
 fi
 
 if [[ -n "$BIN_DIR" ]]; then
-	for DLL in "${DLLS[@]}"; do
-		if [[ -f "$BIN_DIR/$DLL" ]]; then
-			run cp "$BIN_DIR/$DLL" "bin.real/"
-		fi
-	done
+	# These DLLs serve only the native gems (curb, pg, mysql2, ssh2, ...), and
+	# MSYS2 now links libcurl, libpq, libssh2 and libngtcp2_crypto_ossl against
+	# OpenSSL 4. Ruby's own extensions load from ruby_builtin_dlls, so a build
+	# without gems leaves them out.
+	if [[ "$SKIP_GEMS" == "true" ]]; then
+		echo "SKIP_GEMS=true: not copying the native gems' DLLs"
+	else
+		for DLL in "${DLLS[@]}"; do
+			if [[ -f "$BIN_DIR/$DLL" ]]; then
+				run cp "$BIN_DIR/$DLL" "bin.real/"
+			fi
+		done
+	fi
 	# libssl/libcrypto come from $OPENSSL_DIR, which is not $BIN_DIR when the
 	# OpenSSL version is pinned.
 	OPENSSL_BIN_DIR="$BIN_DIR"
