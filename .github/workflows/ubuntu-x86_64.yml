@@ -53,7 +53,7 @@ jobs:
         uses: ruby/setup-ruby@master
         with:
             ruby-version: ${{ matrix.ruby-version }}
-      - name: Build builder image (OpenSSL 3.5.9)
+      - name: Build builder image (OpenSSL 3.5.9, zlib 1.4)
         run: |
             cd linux
             rake image

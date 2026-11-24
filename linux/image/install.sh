@@ -4,6 +4,7 @@ set -e
 source /tr_build/functions.sh
 
 OPENSSL_VERSION=3.5.9
+ZLIB_VERSION=1.4
 MYSQL_LIB_VERSION=6.1.9
 POSTGRESQL_VERSION=15.14
 ICU_RELEASE_VERSION=78.1
@@ -33,6 +34,41 @@ run yum install -y wget sudo readline-devel ncurses-devel s3cmd \
 run mkdir -p /ccache
 run create_user app "App" 1000
 # run pip install awscli==1.19.2
+
+### zlib
+#
+# The Holy Build Box base image ships its own static zlib under /hbb_shlib,
+# which host scanners report by version. Build the pinned one into the same
+# prefix so Ruby's zlib extension, and libssh2 and PostgreSQL below, link it
+# instead. Static and PIC (STATICLIB_CFLAGS), like the other libraries here.
+# /ZLIB_VERSION lets build-ruby.sh check what the zlib extension reports.
+
+header "Installing zlib"
+if ! grep -q "#define ZLIB_VERSION \"$ZLIB_VERSION\"" /hbb_shlib/include/zlib.h 2>/dev/null; then
+	download_and_extract zlib-$ZLIB_VERSION.tar.gz \
+		zlib-$ZLIB_VERSION \
+		https://github.com/madler/zlib/releases/download/v$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz
+
+	(
+		source /hbb_shlib/activate
+		export CFLAGS="$STATICLIB_CFLAGS"
+		unset LDFLAGS
+		run ./configure --prefix=/hbb_shlib --static
+		run make -j$MAKE_CONCURRENCY
+		run make install
+		# Linkers prefer .so over .a when both exist.
+		run rm -f /hbb_shlib/lib/libz.so* /hbb_shlib/lib64/libz.so*
+	)
+	if [[ "$?" != 0 ]]; then false; fi
+
+	echo "Leaving source directory"
+	popd >/dev/null
+	run rm -rf zlib-$ZLIB_VERSION
+	run grep "#define ZLIB_VERSION " /hbb_shlib/include/zlib.h
+else
+	echo "zlib-$ZLIB_VERSION Already installed."
+fi
+echo "$ZLIB_VERSION" >/ZLIB_VERSION
 
 ### OpenSSL
 #
