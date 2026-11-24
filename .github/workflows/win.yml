@@ -22,6 +22,9 @@ env:
   PKG_DATE: 20251122
   # MSYS2 only ships the latest OpenSSL, so the pinned LTS is built from source.
   OPENSSL_VERSION: 3.5.9
+  # zlib comes from the RubyInstaller archive (libz-1.dll); the build fails
+  # unless the packaged Ruby reports this version.
+  ZLIB_VERSION: '1.4'
 
 jobs:
   setup-ruby-versions:
@@ -158,6 +161,19 @@ jobs:
           SKIP_GEMS: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.build_gems != 'true') && 'true' || 'false' }}
           OPENSSL_DIR: /opt/openssl-${{ env.OPENSSL_VERSION }}
           OPENSSL_EXPECTED_VERSION: ${{ env.OPENSSL_VERSION }}
+          ZLIB_EXPECTED_VERSION: ${{ env.ZLIB_VERSION }}
+      # zlib 1.4 changes some behaviour (raw deflate ending exactly at the end
+      # of the output buffer returns Z_STREAM_END; deflateReset() clears the
+      # gzip header), so run Ruby's own zlib tests against the packaged Ruby.
+      - name: zlib tests ${{ matrix.ruby-version }} ${{ matrix.arch }}
+        working-directory: windows
+        run: |
+            V=${{ matrix.ruby-version }}
+            curl --fail -sSL -o ruby-src.tar.gz "https://cache.ruby-lang.org/pub/ruby/${V%.*}/ruby-$V.tar.gz"
+            tar xzf ruby-src.tar.gz "ruby-$V/tool" "ruby-$V/test/runner.rb" "ruby-$V/test/lib" "ruby-$V/test/zlib"
+            output/$V/${{ matrix.arch }}/bin/ruby.bat -rzlib -e 'puts "zlib #{Zlib.zlib_version}"'
+            output/$V/${{ matrix.arch }}/bin/ruby.bat "ruby-$V/test/runner.rb" -v zlib
+            rm -rf ruby-src.tar.gz "ruby-$V"
       - name: package ${{ matrix.arch }}
         # shell: bash
         working-directory: windows
