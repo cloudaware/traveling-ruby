@@ -287,7 +287,7 @@ fi
 
 
 TOTAL_TOOLS=7
-TOTAL_LIBS=14
+TOTAL_LIBS=15
 CCACHE_VERSION=4.12.1
 # https://github.com/ccache/ccache/releases
 CMAKE_VERSION=4.1.2
@@ -308,6 +308,8 @@ M4_VERSION=1.4.20
 # 	OPENSSL_VERSION=1.1.1w
 # else
 OPENSSL_VERSION=3.5.9
+# https://zlib.net/
+ZLIB_VERSION=1.4
 # fi
 # OPENSSL_VERSION=3.0.12
 # OPENSSL_VERSION=3.1.6
@@ -521,7 +523,36 @@ else
 fi
 echo
 
-header "Compiling runtime libraries 1/$TOTAL_LIBS: OpenSSL..."
+# Static, so that OpenSSL (configured with zlib) and Ruby's zlib extension link
+# it rather than the system libz: the linker searches $LIBRARY_PATH before the
+# SDK. Host scanners report the zlib a package carries by version.
+# $RUNTIME_DIR/ZLIB_VERSION lets build-ruby.sh check what the extension reports.
+header "Compiling runtime libraries 1/$TOTAL_LIBS: zlib..."
+if [[ ! -e "$RUNTIME_DIR/lib/zlib-$ZLIB_VERSION-ok" ]]; then
+	run rm -f zlib-$ZLIB_VERSION.tar.gz
+	run curl --fail -L -O https://github.com/madler/zlib/releases/download/v$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz
+	run tar xzf zlib-$ZLIB_VERSION.tar.gz
+	run rm zlib-$ZLIB_VERSION.tar.gz
+	echo "Entering $RUNTIME_DIR/zlib-$ZLIB_VERSION"
+	pushd zlib-$ZLIB_VERSION >/dev/null
+
+	run env CFLAGS="-O2 -fPIC" ./configure --prefix="$RUNTIME_DIR" --static
+	run make -j$CONCURRENCY
+	run make install
+
+	echo "Leaving source directory"
+	popd >/dev/null
+	run rm -rf zlib-$ZLIB_VERSION
+	run rm -f "$RUNTIME_DIR"/lib/libz.*dylib
+	run grep "#define ZLIB_VERSION " "$RUNTIME_DIR/include/zlib.h"
+	touch "$RUNTIME_DIR/lib/zlib-$ZLIB_VERSION-ok"
+else
+	echo "Already installed."
+fi
+echo "$ZLIB_VERSION" >"$RUNTIME_DIR/ZLIB_VERSION"
+echo
+
+header "Compiling runtime libraries 2/$TOTAL_LIBS: OpenSSL..."
 if $SKIP_OPENSSL; then
 	echo "Skipped."
 elif [[ ! -e "$RUNTIME_DIR/lib/openssl-ok" ]] || $FORCE_OPENSSL; then
@@ -576,7 +607,7 @@ else
 fi
 echo
 
-header "Compiling runtime libraries 2/$TOTAL_LIBS: ncurses..."
+header "Compiling runtime libraries 3/$TOTAL_LIBS: ncurses..."
 if $SKIP_NCURSES; then
 	echo "Skipped."
 elif [[ ! -e "$RUNTIME_DIR/lib/libncurses.6.dylib" ]] || $FORCE_NCURSES; then
@@ -639,7 +670,7 @@ else
 fi
 echo
 
-header "Compiling runtime libraries 3/$TOTAL_LIBS: libedit..."
+header "Compiling runtime libraries 4/$TOTAL_LIBS: libedit..."
 if $SKIP_LIBEDIT; then
 	echo "Skipped."
 elif [[ ! -e "$RUNTIME_DIR/lib/libedit.0.dylib" ]] || $FORCE_LIBEDIT; then
@@ -669,7 +700,7 @@ else
 fi
 echo
 
-header "Compiling runtime libraries 4/$TOTAL_LIBS: gmp..."
+header "Compiling runtime libraries 5/$TOTAL_LIBS: gmp..."
 if $SKIP_GMP; then
 	echo "Skipped."
 elif [[ ! -e "$RUNTIME_DIR/lib/libgmp.10.dylib" ]] || $FORCE_GMP; then
@@ -699,7 +730,7 @@ else
 fi
 echo
 
-header "Compiling runtime libraries 5/$TOTAL_LIBS: libffi..."
+header "Compiling runtime libraries 6/$TOTAL_LIBS: libffi..."
 if $SKIP_LIBFFI; then
 	echo "Skipped."
 elif [[ ! -e "$RUNTIME_DIR/lib/libffi.8.dylib" ]] || $FORCE_LIBFFI; then
@@ -727,7 +758,7 @@ else
 fi
 echo
 
-header "Compiling runtime libraries 6/$TOTAL_LIBS: libyaml..."
+header "Compiling runtime libraries 7/$TOTAL_LIBS: libyaml..."
 if $SKIP_LIBYAML; then
 	echo "Skipped."
 elif [[ ! -e "$RUNTIME_DIR/lib/libyaml-0.2.dylib" ]] || $FORCE_LIBYAML; then
@@ -752,7 +783,7 @@ else
 fi
 echo
 
-header "Compiling runtime libraries 7/$TOTAL_LIBS: sqlite3..."
+header "Compiling runtime libraries 8/$TOTAL_LIBS: sqlite3..."
 if $SKIP_SQLITE3; then
 	echo "Skipped."
 elif [[ ! -e "$RUNTIME_DIR/lib/libsqlite3.a" ]] || $FORCE_SQLITE3; then
@@ -801,7 +832,7 @@ else
 fi
 echo
 
-header "Compiling runtime libraries 9/$TOTAL_LIBS: MySQL..."
+header "Compiling runtime libraries 10/$TOTAL_LIBS: MySQL..."
 if $SKIP_MYSQL; then
 	echo "Skipped."
 elif [[ ! -e "$RUNTIME_DIR/lib/libmysqlclient.a" ]] || $FORCE_MYSQL; then
@@ -837,7 +868,7 @@ else
 fi
 echo
 
-header "Compiling runtime libraries 8/$TOTAL_LIBS: liblzma and xzcat..."
+header "Compiling runtime libraries 9/$TOTAL_LIBS: liblzma and xzcat..."
 if $SKIP_LIBLZMA; then
 	echo "Skipped."
 elif [[ ! -e "$RUNTIME_DIR/lib/liblzma.5.dylib" ]] || $FORCE_LIBLZMA; then
@@ -872,7 +903,7 @@ else
 fi
 echo
 
-header "Compiling runtime libraries 10/$TOTAL_LIBS: PostgreSQL..."
+header "Compiling runtime libraries 11/$TOTAL_LIBS: PostgreSQL..."
 if $SKIP_POSTGRESQL; then
 	echo "Skipped."
 elif [[ ! -e "$RUNTIME_DIR/lib/libpq.a" ]] || $FORCE_POSTGRESQL; then
@@ -914,7 +945,7 @@ else
 fi
 echo
 
-header "Compiling runtime libraries 11/$TOTAL_LIBS: ICU..."
+header "Compiling runtime libraries 12/$TOTAL_LIBS: ICU..."
 if $SKIP_ICU; then
 	echo "Skipped."
 elif [[ ! -e "$RUNTIME_DIR/lib/libicudata.a" ]] || $FORCE_ICU; then
@@ -939,7 +970,7 @@ else
 fi
 echo
 
-header "Compiling runtime libraries 12/$TOTAL_LIBS: libssh2..."
+header "Compiling runtime libraries 13/$TOTAL_LIBS: libssh2..."
 if $SKIP_LIBSSH2; then
 	echo "Skipped."
 elif [[ ! -e "$RUNTIME_DIR/lib/libssh2.a" ]] || $FORCE_LIBSSH2; then
@@ -963,7 +994,7 @@ else
 fi
 echo
 
-header "Compiling runtime libraries 13/$TOTAL_LIBS: libxml2..."
+header "Compiling runtime libraries 14/$TOTAL_LIBS: libxml2..."
 if $SKIP_LIBXML2; then
 	echo "Skipped."
 elif [[ ! -e "$RUNTIME_DIR/lib/libxml2.a" ]] || $FORCE_LIBXML2; then
@@ -991,7 +1022,7 @@ else
 fi
 echo
 
-header "Compiling runtime libraries 14/$TOTAL_LIBS: libxslt..."
+header "Compiling runtime libraries 15/$TOTAL_LIBS: libxslt..."
 if $SKIP_LIBXSLT; then
 	echo "Skipped."
 elif [[ ! -e "$RUNTIME_DIR/lib/libxslt.a" ]] || $FORCE_LIBXSLT; then
