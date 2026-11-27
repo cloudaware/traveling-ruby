@@ -500,6 +500,28 @@ header "Sanity checking build output..."
 bash "$SELFDIR/internal/sanity_check.sh" "$TMPBUILDROOT"
 echo
 
+header "Checking zlib..."
+ZLIB_BUNDLE=`find "$TMPBUILDROOT/lib/ruby" -name zlib.bundle | head -1`
+if [[ -z "$ZLIB_BUNDLE" ]]; then
+	echo "ERROR: the zlib extension was not built"
+	exit 1
+fi
+if otool -L "$ZLIB_BUNDLE" | grep -q 'libz\.'; then
+	echo "ERROR: $ZLIB_BUNDLE links a shared libz instead of the pinned static one:"
+	otool -L "$ZLIB_BUNDLE"
+	exit 1
+fi
+ZLIB_REPORTED=`"$TMPBUILDROOT/bin/ruby" -rzlib -e 'puts Zlib::ZLIB_VERSION, Zlib.zlib_version'`
+echo "$ZLIB_REPORTED"
+if [[ -e "$RUNTIME_DIR/ZLIB_VERSION" ]]; then
+	ZLIB_EXPECTED=`cat "$RUNTIME_DIR/ZLIB_VERSION"`
+	if [[ `echo "$ZLIB_REPORTED" | grep -cxF "$ZLIB_EXPECTED"` != 2 ]]; then
+		echo "ERROR: expected zlib $ZLIB_EXPECTED for both the compile-time and the linked library"
+		exit 1
+	fi
+fi
+echo
+
 
 header "Committing build output..."
 shopt -s dotglob

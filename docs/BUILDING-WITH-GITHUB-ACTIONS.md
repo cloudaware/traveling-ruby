@@ -1,11 +1,11 @@
-# Building Ruby 3.3.13 (Linux / Windows / macOS) with GitHub Actions
+# Building Ruby 3.3.14 (Linux / Windows / macOS) with GitHub Actions
 
 Build Traveling Ruby with **OpenSSL 3.5.9**, the 3.5 LTS line (supported until
 2030-04-08), via the repo's workflows.
 
 ## Quick start
 
-Manual runs default to **Ruby 3.3.13 only, no gems**. Trigger from the Actions
+Manual runs default to **Ruby 3.3.14 only, no gems**. Trigger from the Actions
 tab (*Run workflow*) or with `gh`:
 
 ```bash
@@ -19,18 +19,18 @@ gh workflow run macos-arm64.yml   --ref <branch>   # macOS arm64
 Download the artifact when done:
 
 ```bash
-gh run download <run-id> -D ./artifacts   # -> traveling-ruby-<date>-3.3.13-<platform>-<arch>.tar.gz
+gh run download <run-id> -D ./artifacts   # -> traveling-ruby-<date>-3.3.14-<platform>-<arch>.tar.gz
 ```
 
 ## Inputs (manual runs)
 
 | Input | Default | Effect |
 | --- | --- | --- |
-| `ruby_version` | `3.3.13` | Single version to build. Blank = full default matrix (`3.2.9 3.3.13 3.4.7`). |
+| `ruby_version` | `3.3.14` | Single version to build. Blank = full default matrix (`3.2.9 3.3.14 3.4.7`). |
 | `build_gems` | `false` | `false` = plain Ruby only (skips compiling/packaging the ~50 native gems, and gem tests). `true` = full package. |
 
 ```bash
-gh workflow run win.yml --ref <branch> -f ruby_version=3.3.13 -f build_gems=false
+gh workflow run win.yml --ref <branch> -f ruby_version=3.3.14 -f build_gems=false
 ```
 
 Push/release runs are unchanged: full matrix, with gems.

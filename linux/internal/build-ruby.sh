@@ -171,6 +171,28 @@ run rm -rf /tmp/ruby
 run make install-nodoc
 echo
 
+header "Checking zlib"
+ZLIB_SO=`find /tmp/ruby/lib/ruby -name zlib.so | head -1`
+if [[ -z "$ZLIB_SO" ]]; then
+	echo "ERROR: the zlib extension was not built"
+	exit 1
+fi
+if ldd "$ZLIB_SO" | grep -q 'libz\.so'; then
+	echo "ERROR: $ZLIB_SO links a shared libz instead of the pinned static one:"
+	ldd "$ZLIB_SO"
+	exit 1
+fi
+ZLIB_REPORTED=`/tmp/ruby/bin/ruby -rzlib -e 'puts Zlib::ZLIB_VERSION, Zlib.zlib_version'`
+echo "$ZLIB_REPORTED"
+if [[ -e /ZLIB_VERSION ]]; then
+	ZLIB_EXPECTED=`cat /ZLIB_VERSION`
+	if [[ `echo "$ZLIB_REPORTED" | grep -cxF "$ZLIB_EXPECTED"` != 2 ]]; then
+		echo "ERROR: expected zlib $ZLIB_EXPECTED for both the compile-time and the linked library"
+		exit 1
+	fi
+fi
+echo
+
 
 header "Postprocessing build output"
 

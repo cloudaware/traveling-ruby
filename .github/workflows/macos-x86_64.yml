@@ -17,7 +17,7 @@ on:
       ruby_version:
         description: 'Ruby version to build (blank = all default versions)'
         required: false
-        default: '3.3.13'
+        default: '3.3.14'
       build_gems:
         description: 'Also build and package native gems'
         type: boolean
@@ -38,27 +38,30 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       
-      # - name: Generate cache key
-      #   id: cache-key
-      #   run: |
-      #     # Create cache key based on relevant files and inputs
-      #     HASH=$(find macos/setup-runtime.sh macos/internal/ -type f -exec shasum {} \; | shasum | cut -d' ' -f1)
-      #     CLEAR_CACHE="${{ github.event.inputs.clear_cache }}"
-      #     if [ "$CLEAR_CACHE" = "true" ]; then
-      #       HASH="${HASH}-cleared-$(date +%s)"
-      #     fi
-      #     echo "key=macos-x86_64-runtime-${HASH}" >> $GITHUB_OUTPUT
-      #     echo "Runtime cache key: macos-x86_64-runtime-${HASH}"
+      # The runtime (OpenSSL, ICU, MySQL, PostgreSQL, ...) takes 45-100 minutes
+      # to build and changes only with these inputs, so it is cached. The Xcode
+      # it is built with is pinned in DEVELOPER_DIR. clear_cache forces a build.
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          HASH=$(find macos/setup-runtime.sh macos/internal shared/library.sh -type f | sort | xargs shasum | shasum | cut -d' ' -f1)
+          XCODE=$(echo "$DEVELOPER_DIR" | sed -E 's|.*/(Xcode[^/]*)\.app/.*|\1|')
+          KEY="macos-x86_64-runtime-${XCODE}-${HASH}"
+          if [ "${{ github.event.inputs.clear_cache }}" = "true" ]; then
+            KEY="${KEY}-cleared-$(date +%s)"
+          fi
+          echo "key=${KEY}" >> $GITHUB_OUTPUT
+          echo "Runtime cache key: ${KEY}"
       
-
-      # - name: Restore runtime cache
-      #   id: cache-runtime
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: macos/runtime/
-      #     key: ${{ steps.cache-key.outputs.key }}
+      - name: Restore runtime cache
+        id: cache-runtime
+        uses: actions/cache@v4
+        with:
+          path: macos/runtime/
+          key: ${{ steps.cache-key.outputs.key }}
       
-      - name: Build runtime (OpenSSL 3.5.9)
+      - name: Build runtime (OpenSSL 3.5.9, zlib 1.4)
+        if: steps.cache-runtime.outputs.cache-hit != 'true'
         run: |
           echo "Building new runtime..."
           ls /Applications/Xcode*
@@ -72,7 +75,8 @@ jobs:
       - name: Verify runtime
         run: |
           echo "Verifying runtime exists..."
-          ls -la macos/runtime/ || echo "Runtime directory not found"
+          ls -la macos/runtime/
+          test -f macos/runtime/ok
 
       - name: package macos x86_64 runtime
         run: ./scripts/package-macos-runtime.sh
@@ -96,7 +100,7 @@ jobs:
           elif [[ "${GITHUB_REF}" == *preview* || "${GITHUB_HEAD_REF}" == *preview* || "${GITHUB_REF_NAME}" == *preview* ]]; then
             echo "ruby_versions=['3.5.0-preview1','4.0.0-preview2']" >> $GITHUB_OUTPUT
           else
-            echo "ruby_versions=['3.2.9','3.3.13','3.4.7']" >> $GITHUB_OUTPUT
+            echo "ruby_versions=['3.2.9','3.3.14','3.4.7']" >> $GITHUB_OUTPUT
           fi
 
   make-macos-x86_64:

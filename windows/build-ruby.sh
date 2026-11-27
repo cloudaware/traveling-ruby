@@ -282,6 +282,16 @@ if [[ "$GEMFILE" != "" ]]; then
 			run cp openssl.so "$OUTPUT_DIR/lib/ruby/$RUBY_COMPAT_VERSION/$RUBY_ARCH/openssl.so"
 		)
 		run rm -rf "$OSSL_BUILD_DIR"
+		# The rebuilt openssl.so links libcrypto-3-x64.dll and libssl-3-x64.dll.
+		# RubyInstaller 3.3.14 ships only OpenSSL 4's, so put ours where Ruby
+		# loads DLLs from before loading it (126 otherwise). The postprocessing
+		# below copies them again into bin.real/.
+		for DLL in libcrypto-3-x64.dll libssl-3-x64.dll; do
+			run cp "$OPENSSL_DIR/bin/$DLL" "$OUTPUT_DIR/bin/"
+			if [[ -d "$OUTPUT_DIR/bin/ruby_builtin_dlls" ]]; then
+				run cp "$OPENSSL_DIR/bin/$DLL" "$OUTPUT_DIR/bin/ruby_builtin_dlls/"
+			fi
+		done
 		echo "Verifying OpenSSL versions in rebuilt extension:"
 		run "$OUTPUT_DIR/bin/ruby" -ropenssl -e 'puts OpenSSL::OPENSSL_VERSION; puts OpenSSL::OPENSSL_LIBRARY_VERSION'
 	fi
@@ -405,11 +415,19 @@ else
 fi
 
 if [[ -n "$BIN_DIR" ]]; then
-	for DLL in "${DLLS[@]}"; do
-		if [[ -f "$BIN_DIR/$DLL" ]]; then
-			run cp "$BIN_DIR/$DLL" "bin.real/"
-		fi
-	done
+	# These DLLs serve only the native gems (curb, pg, mysql2, ssh2, ...), and
+	# MSYS2 now links libcurl, libpq, libssh2 and libngtcp2_crypto_ossl against
+	# OpenSSL 4. Ruby's own extensions load from ruby_builtin_dlls, so a build
+	# without gems leaves them out.
+	if [[ "$SKIP_GEMS" == "true" ]]; then
+		echo "SKIP_GEMS=true: not copying the native gems' DLLs"
+	else
+		for DLL in "${DLLS[@]}"; do
+			if [[ -f "$BIN_DIR/$DLL" ]]; then
+				run cp "$BIN_DIR/$DLL" "bin.real/"
+			fi
+		done
+	fi
 	# libssl/libcrypto come from $OPENSSL_DIR, which is not $BIN_DIR when the
 	# OpenSSL version is pinned.
 	OPENSSL_BIN_DIR="$BIN_DIR"
@@ -440,6 +458,52 @@ echo "$OSSL_REPORTED"
 if [[ -n "$OPENSSL_EXPECTED_VERSION" ]]; then
 	if [[ `echo "$OSSL_REPORTED" | grep -c "OpenSSL $OPENSSL_EXPECTED_VERSION "` != 2 ]]; then
 		echo "ERROR: expected OpenSSL $OPENSSL_EXPECTED_VERSION for both the compile-time and the loaded library"
+		exit 1
+	fi
+fi
+
+# RubyInstaller 3.3.14 bundles OpenSSL 4 (libcrypto-4-x64.dll,
+# libssl-4-x64.dll and the legacy provider in lib/ossl-modules). Only its own
+# openssl.so used them, and that has been rebuilt against $OPENSSL_DIR above,
+# so drop them: host scanners would report a second OpenSSL in the package.
+# Then fail if any file still names an OpenSSL 4 DLL, which would mean an
+# extension or a copied DLL needs them and would fail to load.
+#
+# ruby_builtin_dlls is a side-by-side assembly whose manifest lists each DLL
+# by name, so its OpenSSL 4 entries are renamed to the OpenSSL 3 DLLs copied
+# there above rather than left pointing at deleted files.
+if [[ "$RUBY_ARCH" == "x64"* ]]; then
+	header "Removing RubyInstaller's OpenSSL 4"
+	MANIFEST=bin.real/ruby_builtin_dlls/ruby_builtin_dlls.manifest
+	if [[ -f "$MANIFEST" ]]; then
+		run sed -i -E 's/lib(crypto|ssl)-4-x64\.dll/lib\1-3-x64.dll/g' "$MANIFEST"
+		cat "$MANIFEST"
+	fi
+	find . \( -name 'libcrypto-4-*.dll' -o -name 'libssl-4-*.dll' \) -print -delete
+	find . -type d -name ossl-modules -print -exec rm -rf {} +
+	OSSL4_REFS=`grep -rlaE 'lib(crypto|ssl)-4-x64\.dll' . || true`
+	if [[ -n "$OSSL4_REFS" ]]; then
+		echo "ERROR: these files still reference OpenSSL 4 DLLs:"
+		echo "$OSSL4_REFS"
+		exit 1
+	fi
+	OSSL_REPORTED=`bin/ruby.bat -ropenssl -e 'puts OpenSSL::OPENSSL_VERSION; puts OpenSSL::OPENSSL_LIBRARY_VERSION'`
+	echo "After removal:"
+	echo "$OSSL_REPORTED"
+	if [[ -n "$OPENSSL_EXPECTED_VERSION" ]]; then
+		if [[ `echo "$OSSL_REPORTED" | grep -c "OpenSSL $OPENSSL_EXPECTED_VERSION "` != 2 ]]; then
+			echo "ERROR: expected OpenSSL $OPENSSL_EXPECTED_VERSION after removing OpenSSL 4"
+			exit 1
+		fi
+	fi
+fi
+
+echo "zlib in the packaged Ruby:"
+ZLIB_REPORTED=`bin/ruby.bat -rzlib -e 'puts Zlib::ZLIB_VERSION, Zlib.zlib_version' | tr -d '\r'`
+echo "$ZLIB_REPORTED"
+if [[ -n "$ZLIB_EXPECTED_VERSION" ]]; then
+	if [[ `echo "$ZLIB_REPORTED" | grep -cxF "$ZLIB_EXPECTED_VERSION"` != 2 ]]; then
+		echo "ERROR: expected zlib $ZLIB_EXPECTED_VERSION for both the compile-time and the loaded library"
 		exit 1
 	fi
 fi
